@@ -40,6 +40,7 @@ public class SurfaceAccessibilityCalculator {
 	private final static Logger log = Logger.getLogger(SurfaceAccessibilityCalculator.class);
 	private final PDBParserManager pdbParserManager;
 	private boolean createImages = false;
+	private String uniprotVersion = null;
 
 	public SurfaceAccessibilityCalculator(UniprotProteinLocalRetriever uplr, String aa, AtomType atomType,
 			File parentPDBFolderContainer) {
@@ -54,6 +55,14 @@ public class SurfaceAccessibilityCalculator {
 
 		list.add(protein);
 		return getSurfaceAccesibilityFromProteins(list).get(protein.getAcc());
+	}
+
+	public String getUniprotVersion() {
+		return uniprotVersion;
+	}
+
+	public void setUniprotVersion(String uniprotVersion) {
+		this.uniprotVersion = uniprotVersion;
 	}
 
 	/**
@@ -81,7 +90,7 @@ public class SurfaceAccessibilityCalculator {
 			}
 		}
 		Map<String, SurfaceAccessibilityProteinReport> ret = new HashMap<String, SurfaceAccessibilityProteinReport>();
-		final Map<String, Entry> annotatedProteins = uplr.getAnnotatedProteins(null, uniprotAccs);
+		final Map<String, Entry> annotatedProteins = uplr.getAnnotatedProteins(getUniprotVersion(), uniprotAccs);
 		for (SurfaceProtein protein : proteins) {
 			if (annotatedProteins.containsKey(protein.getAcc())) {
 				final SurfaceAccessibilityProteinReport surfaceAccesibilityFromProtein = getSurfaceAccesibilityFromProtein(
@@ -173,7 +182,8 @@ public class SurfaceAccessibilityCalculator {
 							}
 							// get a list of ranked chains from the best to the
 							// worst proteinPDB structure
-							final List<Chain> chains = getBestProteinPDBStructure(entry, positionInUniprotProtein);
+							final List<Chain> chains = getPDBChainListSortedByResolution(entry,
+									positionInUniprotProtein);
 							if (chains.isEmpty()) {
 								log.debug("No PDB structures for position " + positionInUniprotProtein + " protein "
 										+ acc);
@@ -300,7 +310,7 @@ public class SurfaceAccessibilityCalculator {
 	 * @param positionInUniprot
 	 * @return a List of Chain. Sorted by resolution.
 	 */
-	private List<Chain> getBestProteinPDBStructure(Entry entry, int positionInUniprot) {
+	private List<Chain> getPDBChainListSortedByResolution(Entry entry, int positionInUniprot) {
 		List<Chain> ret = new ArrayList<Chain>();
 		final List<DbReferenceType> dbReferences = entry.getDbReference();
 		if (dbReferences != null) {

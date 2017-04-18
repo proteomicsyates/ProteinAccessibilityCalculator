@@ -21,6 +21,8 @@ import org.apache.log4j.Logger;
 
 import edu.scripps.yates.annotations.uniprot.xml.Entry;
 import edu.scripps.yates.pdb.model.SurfaceProtein;
+import edu.scripps.yates.utilities.progresscounter.ProgressCounter;
+import edu.scripps.yates.utilities.progresscounter.ProgressPrintingType;
 
 /**
  * Class that manages the surface accessibility reports in a parsistence layer,
@@ -226,29 +228,23 @@ public class SurfaceAccessibilityManager {
 	public Map<String, SurfaceAccessibilityProteinReport> getSurfaceAccesibilityFromProteins(
 			Set<SurfaceProtein> proteins) {
 		Map<String, SurfaceAccessibilityProteinReport> ret = new HashMap<String, SurfaceAccessibilityProteinReport>();
-		int counter = 0;
-		int percentage = 0;
+
+		ProgressCounter counter = new ProgressCounter(proteins.size(), ProgressPrintingType.PERCENTAGE_STEPS, 1);
 		for (SurfaceProtein protein : proteins) {
-			int newPercentage = counter * 100 / proteins.size();
-			if (newPercentage != percentage) {
-				log.info(newPercentage + "% of proteins analyzed");
-				percentage = newPercentage;
+			counter.increment();
+			String printIfNecessary = counter.printIfNecessary();
+			if (!"".equals(printIfNecessary)) {
+				log.info(printIfNecessary);
 			}
+
 			final SurfaceAccessibilityProteinReport report = getProteinAccessibilityReportByProtein(protein);
 			if (report != null) {
 				ret.put(protein.getAcc(), report);
 				// dumpToFile();
 			}
-			counter++;
+
 		}
 		return ret;
-	}
-
-	/**
-	 * @return the calculateIfNotPresent
-	 */
-	public boolean isCalculateIfNotPresent() {
-		return calculateIfNotPresent;
 	}
 
 	/**

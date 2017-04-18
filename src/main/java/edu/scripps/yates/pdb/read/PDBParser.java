@@ -29,6 +29,7 @@ public class PDBParser {
 	private final static String COMPND = "COMPND";
 	private final static String DBREF = "DBREF";
 	private final static String SEQRES = "SEQRES";
+	private final static String EXPDTA = "EXPDTA";
 	private final static String ATOM = "ATOM";
 	private final static String CA_ATOMS_ONLY = "CA ATOMS ONLY";
 	private final static String MDLTYP = "MDLTYP";
@@ -42,6 +43,7 @@ public class PDBParser {
 	private final String pdbID;
 	private final Map<String, SiteSurfaceAccessibilityReport> reportsByPDBPositionAndChain = new HashMap<String, SiteSurfaceAccessibilityReport>();
 	private String selectedChainID;
+	private String experimentalMethod;
 
 	public PDBParser(String filePath, String pdbID) throws IOException {
 		this.filePath = filePath;
@@ -345,6 +347,20 @@ public class PDBParser {
 			list.add(new DBRef(dbLine));
 		}
 		return list;
+	}
+
+	public String getExperimentalMethod() {
+		if (experimentalMethod == null) {
+			try {
+				List<String> lines = getLinesStarting(EXPDTA);
+				if (!lines.isEmpty()) {
+					experimentalMethod = lines.get(0);
+				}
+			} catch (IOException e) {
+
+			}
+		}
+		return experimentalMethod;
 	}
 
 	public String getSequence(DBRef dbRef) throws IOException, NotValidPDBException {

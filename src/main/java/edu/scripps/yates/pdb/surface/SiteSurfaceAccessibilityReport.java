@@ -1,5 +1,9 @@
 package edu.scripps.yates.pdb.surface;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+
 import edu.scripps.yates.pdb.model.Atom;
 import edu.scripps.yates.pdb.model.AtomType;
 
@@ -59,6 +63,7 @@ public class SiteSurfaceAccessibilityReport {
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
@@ -136,5 +141,18 @@ public class SiteSurfaceAccessibilityReport {
 	 */
 	public float getResolution() {
 		return resolution;
+	}
+
+	public JsonObject toJson() {
+		String aa = getAa();
+		double accesibility = getAccesibility();
+		int positionInUniprot = getPositionInUniprot();
+		int positionInPDB = getPositionInPDB();
+		float resolution = getResolution();
+		String pdbID = getPdbID();
+		JsonObjectBuilder objectBuilder = Json.createObjectBuilder().add("aa", aa).add("accesibility", accesibility)
+				.add("positionInUniprot", positionInUniprot).add("positionInPDB", positionInPDB)
+				.add("resolution", resolution).add("pdbID", pdbID);
+		return objectBuilder.build();
 	}
 }

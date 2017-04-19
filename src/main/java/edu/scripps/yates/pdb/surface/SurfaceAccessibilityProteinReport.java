@@ -8,6 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+
 import org.apache.log4j.Logger;
 
 /**
@@ -118,6 +123,7 @@ public class SurfaceAccessibilityProteinReport {
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
@@ -137,5 +143,16 @@ public class SurfaceAccessibilityProteinReport {
 		}
 
 		return sb.toString();
+	}
+
+	public JsonObject toJson() {
+		JsonObjectBuilder builder = Json.createObjectBuilder().add("uniprotACC", uniprotACC)
+				.add("uniprotProteinSequence", uniprotProteinSequence);
+		JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+		builder.add("reports", arrayBuilder);
+		for (SiteSurfaceAccessibilityReport report : reports) {
+			arrayBuilder.add(report.toJson());
+		}
+		return builder.build();
 	}
 }

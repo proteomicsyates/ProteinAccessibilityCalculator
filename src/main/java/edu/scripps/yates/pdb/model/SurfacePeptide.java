@@ -1,8 +1,12 @@
 package edu.scripps.yates.pdb.model;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class SurfacePeptide {
 	private String sequence;
 	private double ratio;
+	private final Set<SurfaceProtein> proteins = new HashSet<SurfaceProtein>();
 
 	public SurfacePeptide(String sequence, double ratio) {
 		super();
@@ -40,4 +44,11 @@ public class SurfacePeptide {
 		this.ratio = ratio;
 	}
 
+	public void addProtein(SurfaceProtein protein) {
+		this.proteins.add(protein);
+	}
+
+	public Set<SurfaceProtein> getProteins() {
+		return this.proteins;
+	}
 }

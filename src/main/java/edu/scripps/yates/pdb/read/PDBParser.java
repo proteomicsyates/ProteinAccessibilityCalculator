@@ -34,6 +34,7 @@ public class PDBParser {
 	private final static String CA_ATOMS_ONLY = "CA ATOMS ONLY";
 	private final static String MDLTYP = "MDLTYP";
 	private static final int MIN_PEP_LENGTH = 6;
+	private static final String MUTATION = "MUTATION: YES";
 	private final String filePath;
 	private static JmolViewer viewer;
 	private ArrayList<Atom> atomList;
@@ -41,9 +42,10 @@ public class PDBParser {
 	private HashMap<Integer, List<Atom>> atomsByPosition;
 	private boolean opened = false;
 	private final String pdbID;
-	private final Map<String, SiteSurfaceAccessibilityReport> reportsByPDBPositionAndChain = new HashMap<String, SiteSurfaceAccessibilityReport>();
+	private static final Map<String, SiteSurfaceAccessibilityReport> reportsByPDBPositionAndChainAndRemovals = new HashMap<String, SiteSurfaceAccessibilityReport>();
 	private String selectedChainID;
 	private String experimentalMethod;
+	private Boolean mutation;
 
 	public PDBParser(String filePath, String pdbID) throws IOException {
 		this.filePath = filePath;
@@ -79,9 +81,10 @@ public class PDBParser {
 			SurfaceAccebilityInputParameters inputParameters) throws IOException, NotValidPDBException {
 		if (inputParameters.getUniprotACC() != null) {
 			Map<String, SiteSurfaceAccessibilityReport> ret = new HashMap<String, SiteSurfaceAccessibilityReport>();
-			final SiteSurfaceAccessibilityReport report = getSiteSurfaceAccesibilityMappedToUniprot(inputParameters,
-					true);
-			ret.put(report.getPositionInPDB() + report.getAtom().getChainID(), report);
+			final SiteSurfaceAccessibilityReport report = getSiteSurfaceAccesibilityMappedToUniprot(inputParameters);
+			if (report != null) {
+				ret.put(report.getPositionInPDB() + report.getAtom().getChainID(), report);
+			}
 			return ret;
 		} else {
 			return getSiteSurfaceAccesibilityForPDBModel(inputParameters);
@@ -90,14 +93,6 @@ public class PDBParser {
 
 	private Map<String, SiteSurfaceAccessibilityReport> getSiteSurfaceAccesibilityForPDBModel(
 			SurfaceAccebilityInputParameters inputParameters) throws IOException, NotValidPDBException {
-
-		return getSiteSurfaceAccesibilityForPDBModel(inputParameters, inputParameters.getChain() != null);
-
-	}
-
-	private Map<String, SiteSurfaceAccessibilityReport> getSiteSurfaceAccesibilityForPDBModel(
-			SurfaceAccebilityInputParameters inputParameters, boolean removeOtherChains)
-			throws IOException, NotValidPDBException {
 		// get the proteinSequence in PDB
 		Chain chain = inputParameters.getChain();
 		List<DBRef> dbRefs = new ArrayList<DBRef>();
@@ -107,6 +102,7 @@ public class PDBParser {
 		} else {
 			dbRefs.addAll(getDBRefs());
 		}
+		boolean mutation = getMutation();
 		for (DBRef dbRef : dbRefs) {
 			if (dbRef != null && dbRef.getChainID() != null) {
 				chain = new Chain(pdbID, dbRef.getChainID() + "=0-0", -1.0f);
@@ -119,28 +115,35 @@ public class PDBParser {
 						inputParameters.getAa());
 				for (Integer positionInPDB : aaPositionsInPDB) {
 
-					final String key = positionInPDB + chain.getIdentifier();
+					final String key = positionInPDB + chain.getIdentifier() + inputParameters.isRemoveOtherChains()
+							+ inputParameters.isRemoveOtherMolecules();
 
-					if (reportsByPDBPositionAndChain.containsKey(key)) {
+					if (reportsByPDBPositionAndChainAndRemovals.containsKey(key)) {
 						log.info("Surface  accesibility already calculated for site " + positionInPDB + " in chain "
-								+ chain.getIdentifier() + " of PDB " + chain.getPdbID());
+								+ chain.getIdentifier() + " of PDB " + chain.getPdbID() + " with removingOtherChains="
+								+ inputParameters.isRemoveOtherChains() + " and removingOtherMolcules="
+								+ inputParameters.isRemoveOtherMolecules());
 						continue;
 					}
 					// get the appropiate atom in the chain of PDB
 					final AtomType atomType = inputParameters.getAtomType();
 					final String aa = inputParameters.getAa();
+
 					Atom atom = getAtom(chain.getIdentifier(), aa, atomType, positionInPDB);
 					if (atom == null) {
 						log.warn("Atom is not found in chainID: '" + chain.getIdentifier() + "' in aa: '" + aa
 								+ "' atomType: '" + atomType + "' position in PDB: '" + positionInPDB + "'");
 						continue;
 					}
-					Double accesibility = getSurfaceAccesibilityOfAtom(atom, removeOtherChains);
+					Double accesibility = getSurfaceAccesibilityOfAtom(atom, inputParameters.isRemoveOtherChains(),
+							inputParameters.isRemoveOtherMolecules());
 					if (accesibility != null) {
 						SiteSurfaceAccessibilityReport report = new SiteSurfaceAccessibilityReport(dbRef.getPdbID(),
 								accesibility, aa, atom, atomType, positionInPDB, inputParameters.getUniprotACC(),
-								inputParameters.getPositionInUniprotProtein(), chain.getResolution());
-						reportsByPDBPositionAndChain.put(key, report);
+								inputParameters.getPositionInUniprotProtein(), chain.getResolution(),
+								inputParameters.isRemoveOtherChains(), inputParameters.isRemoveOtherMolecules(),
+								mutation, getExperimentalMethod());
+						reportsByPDBPositionAndChainAndRemovals.put(key, report);
 
 					}
 				}
@@ -148,12 +151,11 @@ public class PDBParser {
 				throw new NotValidPDBException("Chain " + chain.getIdentifier() + " not found in PDBParser " + this);
 			}
 		}
-		return reportsByPDBPositionAndChain;
+		return reportsByPDBPositionAndChainAndRemovals;
 	}
 
 	private SiteSurfaceAccessibilityReport getSiteSurfaceAccesibilityMappedToUniprot(
-			SurfaceAccebilityInputParameters inputParameters, boolean removeOtherChains)
-			throws IOException, NotValidPDBException {
+			SurfaceAccebilityInputParameters inputParameters) throws IOException, NotValidPDBException {
 		// get the proteinSequence in PDB
 		final Chain chain = inputParameters.getChain();
 		DBRef dbRef = PDBUtil.getDBRef(this, chain.getIdentifier());
@@ -168,14 +170,14 @@ public class PDBParser {
 
 				final int peptideStartInPDB = pdbProteinSeq.lastIndexOf(uniprotPeptideSeq) + 1;
 				final int positionInPDB = peptideStartInPDB + inputParameters.getPositionInPeptide();
-				final String key = positionInPDB + chain.getIdentifier();
-				if (chain.getPdbID().equals("2RAI") && positionInPDB == 126) {
-					System.out.println("asdf");
-				}
-				if (reportsByPDBPositionAndChain.containsKey(key)) {
+				final String key = positionInPDB + chain.getIdentifier() + inputParameters.isRemoveOtherChains()
+						+ inputParameters.isRemoveOtherMolecules();
+				if (reportsByPDBPositionAndChainAndRemovals.containsKey(key)) {
 					log.info("Surface accesibility already calculated for site " + positionInPDB + " in chain "
-							+ chain.getIdentifier() + " of PDB " + chain.getPdbID());
-					return reportsByPDBPositionAndChain.get(key);
+							+ chain.getIdentifier() + " of PDB " + chain.getPdbID() + " with removingOtherChains="
+							+ inputParameters.isRemoveOtherChains() + " and removingOtherMolcules="
+							+ inputParameters.isRemoveOtherMolecules());
+					return reportsByPDBPositionAndChainAndRemovals.get(key);
 				}
 				// get the appropiate atom in the chain of PDB
 				final AtomType atomType = inputParameters.getAtomType();
@@ -186,12 +188,16 @@ public class PDBParser {
 							"Atom is not found with chainID: '" + chain.getIdentifier() + "' in aa: '" + aa
 									+ "' atomType: '" + atomType + "' position in PDB: '" + positionInPDB + "'");
 				}
-				Double accesibility = getSurfaceAccesibilityOfAtom(atom, removeOtherChains);
+				Double accesibility = getSurfaceAccesibilityOfAtom(atom, inputParameters.isRemoveOtherChains(),
+						inputParameters.isRemoveOtherMolecules());
 				if (accesibility != null) {
+					String experimentalMethod2 = getExperimentalMethod();
 					SiteSurfaceAccessibilityReport report = new SiteSurfaceAccessibilityReport(dbRef.getPdbID(),
 							accesibility, aa, atom, atomType, positionInPDB, inputParameters.getUniprotACC(),
-							inputParameters.getPositionInUniprotProtein(), chain.getResolution());
-					reportsByPDBPositionAndChain.put(key, report);
+							inputParameters.getPositionInUniprotProtein(), chain.getResolution(),
+							inputParameters.isRemoveOtherChains(), inputParameters.isRemoveOtherMolecules(),
+							getMutation(), experimentalMethod2);
+					reportsByPDBPositionAndChainAndRemovals.put(key, report);
 					return report;
 
 				}
@@ -203,6 +209,18 @@ public class PDBParser {
 			throw new NotValidPDBException("Chain " + chain.getIdentifier() + " not found in PDBParser " + this);
 		}
 		return null;
+	}
+
+	private Boolean getMutation() throws IOException, NotValidPDBException {
+		if (mutation == null) {
+			final List<String> lines = getLinesContaining(MUTATION);
+			if (lines != null && !lines.isEmpty()) {
+				mutation = true;
+			} else {
+				mutation = false;
+			}
+		}
+		return mutation;
 	}
 
 	private Atom getAtom(String chainID, String aa, AtomType atomType, int positionInPDB)
@@ -222,11 +240,12 @@ public class PDBParser {
 		return null;
 	}
 
-	private Double getSurfaceAccesibilityOfAtom(Atom atom, boolean removeOtherChains) {
+	private Double getSurfaceAccesibilityOfAtom(Atom atom, boolean removeOtherChains, boolean removeOtherMolecules) {
 
 		if (!atom.getChainID().equals(selectedChainID)) {
 			init(true);
-			executeCommands(JMolCommandsUtil.getSelectChainJMolScriptByAtom(atom, removeOtherChains));
+			executeCommands(
+					JMolCommandsUtil.getSelectChainJMolScriptByAtom(atom, removeOtherChains, removeOtherMolecules));
 			selectedChainID = atom.getChainID();
 		} else {
 			init(false);
@@ -354,7 +373,8 @@ public class PDBParser {
 			try {
 				List<String> lines = getLinesStarting(EXPDTA);
 				if (!lines.isEmpty()) {
-					experimentalMethod = lines.get(0);
+					String string = lines.get(0);
+					experimentalMethod = string.substring(string.indexOf(EXPDTA) + EXPDTA.length()).trim();
 				}
 			} catch (IOException e) {
 

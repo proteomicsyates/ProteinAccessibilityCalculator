@@ -5,20 +5,20 @@ public class Chain {
 	private final int start;
 	private final int end;
 	private final String pdbID;
-	private float resolution;
+	private Float resolution;
 
 	/**
 	 *
 	 * @param text
 	 *            like 'A=328-363'
 	 */
-	public Chain(String pdbID, String text, float resolution) {
+	public Chain(String pdbID, String text, Float resolution) {
 		final String[] split = text.split("=");
 		identifier = split[0].trim();
 		final String[] split2 = split[1].split("-");
 		start = Integer.valueOf(split2[0].trim());
 		end = Integer.valueOf(split2[1].trim());
-		this.resolution=resolution;
+		this.resolution = resolution;
 		this.pdbID = pdbID.trim();
 	}
 
@@ -59,6 +59,7 @@ public class Chain {
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
@@ -66,8 +67,7 @@ public class Chain {
 		return pdbID + " [ chain:" + identifier + ", start=" + start + ", end=" + end + "]";
 	}
 
-
-	public float getResolution() {
+	public Float getResolution() {
 		return resolution;
 	}
 

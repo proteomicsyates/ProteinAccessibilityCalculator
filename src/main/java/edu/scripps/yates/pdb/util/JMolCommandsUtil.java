@@ -113,11 +113,14 @@ public class JMolCommandsUtil {
 		return ret;
 	}
 
-	public static JMolScript getSelectChainJMolScriptByAtom(Atom atom, boolean removeOtherChains) {
+	public static JMolScript getSelectChainJMolScriptByAtom(Atom atom, boolean removeOtherChains,
+			boolean removeOtherMolecules) {
 		// delete all molecules not equals to
 		JMolScript ret = new JMolScript();
 		// delete all molecules different than a protein
-		ret.addCommand("delete not protein");
+		if (removeOtherMolecules) {
+			ret.addCommand("delete not protein");
+		}
 		if (removeOtherChains) {
 			// delete all molecules different than our chain
 			ret.addCommand("delete not chain = " + atom.getChainID() + "");

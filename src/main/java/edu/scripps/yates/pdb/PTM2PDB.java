@@ -136,7 +136,7 @@ public class PTM2PDB {
 					System.exit(-1);
 				}
 			}
-			SurfaceAccessibilityCalculator sac = new SurfaceAccessibilityCalculator(uplr, aas, atomType,
+			SurfaceAccessibilityCalculator sac = new SurfaceAccessibilityCalculator(uplr, aas, atomType, true, true,
 					parentPDBFolderContainer);
 			// read input file
 			Map<String, SurfaceProtein> surfaceProteins = readInputFile(inputFile, separatorString, skipHeader,

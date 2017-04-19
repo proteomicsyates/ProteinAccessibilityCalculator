@@ -28,6 +28,7 @@ import edu.scripps.yates.pdb.read.PDBUtil;
 import edu.scripps.yates.pdb.util.JMolCommandsUtil;
 import edu.scripps.yates.pdb.util.SurfaceAccebilityInputParameters;
 import edu.scripps.yates.utilities.fasta.FastaParser;
+import edu.scripps.yates.utilities.maths.Maths;
 import edu.scripps.yates.utilities.strings.StringUtils;
 import edu.scripps.yates.utilities.util.Pair;
 
@@ -41,12 +42,19 @@ public class SurfaceAccessibilityCalculator {
 	private final PDBParserManager pdbParserManager;
 	private boolean createImages = false;
 	private String uniprotVersion = null;
+	private boolean removeOtherChains;
+	private boolean removeOtherMolecules;
+	private SurfaceAccessibilityManager manager;
+	private static List<Integer> numPDBStructuresList = new ArrayList<Integer>();
 
 	public SurfaceAccessibilityCalculator(UniprotProteinLocalRetriever uplr, String aa, AtomType atomType,
-			File parentPDBFolderContainer) {
+			boolean removeOtherChains, boolean removeOtherMolecules, File parentPDBFolderContainer) {
 		this.uplr = uplr;
 		this.aa = aa;
 		this.atomType = atomType;
+		this.removeOtherChains = removeOtherChains;
+		this.removeOtherMolecules = removeOtherMolecules;
+
 		pdbParserManager = new PDBParserManager(parentPDBFolderContainer);
 	}
 
@@ -112,28 +120,39 @@ public class SurfaceAccessibilityCalculator {
 		PDBParser parser = pdbParserManager.getPDBParserByPDBID(pdbID);
 		if (parser != null) {
 			if (chainID != null) {
-				inputParameters = new SurfaceAccebilityInputParameters(aa, atomType, pdbID, chainID);
+
+				inputParameters = new SurfaceAccebilityInputParameters(aa, atomType, pdbID, chainID, removeOtherChains,
+						removeOtherMolecules);
 			} else {
-				inputParameters = new SurfaceAccebilityInputParameters(aa, atomType, pdbID);
+				inputParameters = new SurfaceAccebilityInputParameters(aa, atomType, pdbID, removeOtherChains,
+						removeOtherMolecules);
 			}
-			// if not exception, exit loop here
-			// break;
-
-			log.info("Using PDB model " + pdbID);
-
-			Map<String, SiteSurfaceAccessibilityReport> siteReports = null;
-			try {
-				siteReports = parser.getSiteSurfaceAccesibilityFromParameters(inputParameters);
-			} catch (IOException | NotValidPDBException e) {
-				// not do anything
-			}
-			if (siteReports != null) {
-				for (String key : siteReports.keySet()) {
-					proteinReport.addSurfaceAccesibilityReport(siteReports.get(key));
+			SurfaceAccessibilityProteinReport proteinAccessibilityReportByProtein = manager
+					.getProteinAccessibilityReportByProtein(inputParameters.getReportKey());
+			if (proteinAccessibilityReportByProtein != null) {
+				for (SiteSurfaceAccessibilityReport report : proteinAccessibilityReportByProtein.getReports()) {
+					proteinReport.addSurfaceAccesibilityReport(report);
 				}
 
-			}
+			} else {
+				// if not exception, exit loop here
+				// break;
 
+				log.info("Using PDB model " + pdbID);
+
+				Map<String, SiteSurfaceAccessibilityReport> siteReports = null;
+				try {
+					siteReports = parser.getSiteSurfaceAccesibilityFromParameters(inputParameters);
+				} catch (IOException | NotValidPDBException e) {
+					// not do anything
+				}
+				if (siteReports != null) {
+					for (String key : siteReports.keySet()) {
+						proteinReport.addSurfaceAccesibilityReport(siteReports.get(key));
+					}
+
+				}
+			}
 		}
 		if (!proteinReport.getReports().isEmpty()) {
 			log.info("Surface accessibilities calculated for " + pdbID + " in " + proteinReport.getReports().size()
@@ -197,16 +216,25 @@ public class SurfaceAccessibilityCalculator {
 
 									SurfaceAccebilityInputParameters inputParameters = new SurfaceAccebilityInputParameters(
 											aa, atomType, positionInUniprotProtein, chain, uniprotPeptideSequence,
-											positionInPeptide, acc);
-									numCalculationsToDo++;
-									if (parametersByPDBID.containsKey(inputParameters.getPdbID())) {
-										parametersByPDBID.get(inputParameters.getPdbID()).add(inputParameters);
-									} else {
-										List<SurfaceAccebilityInputParameters> list = new ArrayList<SurfaceAccebilityInputParameters>();
-										list.add(inputParameters);
-										parametersByPDBID.put(inputParameters.getPdbID(), list);
-									}
+											positionInPeptide, acc, removeOtherChains, removeOtherMolecules);
+									SurfaceAccessibilityProteinReport proteinAccessibilityReportByProtein = manager
+											.getProteinAccessibilityReportByProtein(inputParameters.getReportKey());
+									if (proteinAccessibilityReportByProtein != null) {
+										for (SiteSurfaceAccessibilityReport report : proteinAccessibilityReportByProtein
+												.getReports()) {
+											proteinReport.addSurfaceAccesibilityReport(report);
+										}
 
+									} else {
+										numCalculationsToDo++;
+										if (parametersByPDBID.containsKey(inputParameters.getPdbID())) {
+											parametersByPDBID.get(inputParameters.getPdbID()).add(inputParameters);
+										} else {
+											List<SurfaceAccebilityInputParameters> list = new ArrayList<SurfaceAccebilityInputParameters>();
+											list.add(inputParameters);
+											parametersByPDBID.put(inputParameters.getPdbID(), list);
+										}
+									}
 								}
 								// if not exception, exit loop here
 								// break;
@@ -312,33 +340,40 @@ public class SurfaceAccessibilityCalculator {
 	 */
 	private List<Chain> getPDBChainListSortedByResolution(Entry entry, int positionInUniprot) {
 		List<Chain> ret = new ArrayList<Chain>();
+		int numPDBStructures = 0;
 		final List<DbReferenceType> dbReferences = entry.getDbReference();
 		if (dbReferences != null) {
 			for (DbReferenceType dbReferenceType : dbReferences) {
 				if (dbReferenceType.getType().equals("PDB")) {
+					numPDBStructures++;
 					// see if this crystal structure include the position we are
 					// interested in
 					String resolutionString = PDBUtil.getPropertyValueFromDbReferenceType(dbReferenceType,
 							"resolution");
+					Float resolution = null;
 					if (resolutionString != null) {
-						final float resolution = Float.valueOf(resolutionString);
-						String chainsString = PDBUtil.getPropertyValueFromDbReferenceType(dbReferenceType, "chains");
-						Set<Chain> chains = getChainsFromChainString(chainsString, dbReferenceType, resolution);
-						for (Chain chain : chains) {
-							if (chain.includesPosition(positionInUniprot)) {
-								ret.add(chain);
-							}
+						resolution = Float.valueOf(resolutionString);
+					}
+					String chainsString = PDBUtil.getPropertyValueFromDbReferenceType(dbReferenceType, "chains");
+					Set<Chain> chains = getChainsFromChainString(chainsString, dbReferenceType, resolution);
+					for (Chain chain : chains) {
+						if (chain.includesPosition(positionInUniprot)) {
+							ret.add(chain);
 						}
 					}
+
 				}
 			}
 		}
+		numPDBStructuresList.add(numPDBStructures);
 		if (!ret.isEmpty()) {
 			// sort by resolution
 			Comparator<Chain> comparator = new Comparator<Chain>() {
 				@Override
 				public int compare(Chain o1, Chain o2) {
-					return Float.compare(o2.getResolution(), o1.getResolution());
+					Float res1 = o1.getResolution() != null ? o1.getResolution() : -1;
+					Float res2 = o2.getResolution() != null ? o2.getResolution() : -1;
+					return Float.compare(res2, res1);
 				}
 			};
 			Collections.sort(ret, comparator);
@@ -351,8 +386,23 @@ public class SurfaceAccessibilityCalculator {
 		return ret;
 	}
 
+	public static String getStatistics() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(numPDBStructuresList.size() + " proteins analyzed\n");
+		double mean = Maths.mean(numPDBStructuresList.toArray(new Integer[0]));
+		double stddev = Maths.stddev(numPDBStructuresList.toArray(new Integer[0]));
+		double sum = Maths.sum((numPDBStructuresList.toArray(new Double[0])));
+		sb.append(sum + " total PDB structures matched\n" + mean + "(" + stddev
+				+ ") structures matched per protein in average (stdev)");
+		return sb.toString();
+	}
+
+	public static void clearStatistics() {
+		numPDBStructuresList.clear();
+	}
+
 	private Set<Chain> getChainsFromChainString(String chainsString, DbReferenceType dbReferenceType,
-			float resolution) {
+			Float resolution) {
 		Set<Chain> ret = new HashSet<Chain>();
 		if (chainsString.contains(",")) {
 			final String[] split = chainsString.split(",");
@@ -366,7 +416,7 @@ public class SurfaceAccessibilityCalculator {
 	}
 
 	private Set<Chain> getChainsFromIndividualChainString(String individualChaingString,
-			DbReferenceType dbReferenceType, float resolution) {
+			DbReferenceType dbReferenceType, Float resolution) {
 		Set<Chain> ret = new HashSet<Chain>();
 		if (individualChaingString.contains("=")) {
 			final String[] split = individualChaingString.split("=");
@@ -414,6 +464,19 @@ public class SurfaceAccessibilityCalculator {
 	 */
 	public UniprotProteinLocalRetriever getUplr() {
 		return uplr;
+	}
+
+	public boolean isRemoveOtherChains() {
+		return removeOtherChains;
+	}
+
+	public boolean isRemoveOtherMolecules() {
+		return removeOtherMolecules;
+	}
+
+	public void setManager(SurfaceAccessibilityManager surfaceAccessibilityManager) {
+		this.manager = surfaceAccessibilityManager;
+
 	}
 
 }

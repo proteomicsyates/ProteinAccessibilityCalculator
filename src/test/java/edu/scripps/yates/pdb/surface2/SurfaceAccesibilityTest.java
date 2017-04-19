@@ -338,7 +338,7 @@ public class SurfaceAccesibilityTest {
 	@Test
 	public void surfaceAccesibilityFromRemoteFiles_DNABinding_FromTable() {
 		String GO = "GO:0003677";
-		boolean filterByAnnotation = true;
+		boolean filterByAnnotation = false;
 		// Double minRatio = -Double.MAX_VALUE;
 		Double minRatio = 0.0;
 		// this gets the experimental data from a table
@@ -374,8 +374,14 @@ public class SurfaceAccesibilityTest {
 				Double ratio = Double.valueOf(ratios.get(i));
 				if (ratio >= minRatio) {
 					String acc = accs.get(i);
+					if (acc.equals("P09211")) {
+						System.out.println(acc);
+					}
 					Entry entry = annotatedProteins.get(acc);
 					if (entry != null) {
+						if (acc.equals("P09211")) {
+							System.out.println(acc);
+						}
 						List<String> query = JAXBXPathQuery.query(entry, "dbReference$id=" + GO, "$id");
 						boolean containsAnnotation = !query.isEmpty();
 						if (filterByAnnotation && !containsAnnotation) {

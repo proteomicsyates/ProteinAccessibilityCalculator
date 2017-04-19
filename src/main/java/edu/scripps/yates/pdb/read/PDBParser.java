@@ -171,8 +171,7 @@ public class PDBParser {
 
 				final int peptideStartInPDB = pdbProteinSeq.lastIndexOf(uniprotPeptideSeq) + 1;
 				final int positionInPDB = peptideStartInPDB + inputParameters.getPositionInPeptide();
-				final String key = positionInPDB + chain.getIdentifier() + inputParameters.isRemoveOtherChains()
-						+ inputParameters.isRemoveOtherMolecules();
+				final String key = inputParameters.getReportKey();
 				if (reportsByPDBPositionAndChainAndRemovals.containsKey(key)) {
 					log.info("Surface accesibility already calculated for site " + positionInPDB + " in chain "
 							+ chain.getIdentifier() + " of PDB " + chain.getPdbID() + " with removingOtherChains="
@@ -242,14 +241,13 @@ public class PDBParser {
 
 	private Double getSurfaceAccesibilityOfAtom(Atom atom, boolean removeOtherChains, boolean removeOtherMolecules) {
 
-		if (!atom.getChainID().equals(selectedChainID)) {
-			init(true);
-			executeCommands(
-					JMolCommandsUtil.getSelectChainJMolScriptByAtom(atom, removeOtherChains, removeOtherMolecules));
-			selectedChainID = atom.getChainID();
-		} else {
-			init(false);
-		}
+		// if (!atom.getChainID().equals(selectedChainID)) {
+		init(true);
+		executeCommands(JMolCommandsUtil.getSelectChainJMolScriptByAtom(atom, removeOtherChains, removeOtherMolecules));
+		selectedChainID = atom.getChainID();
+		// } else {
+		// init(false);
+		// }
 		// executeCommands(JMolCommandsUtil.getSelectAtomScript(atom));
 		String strOutput = executeCommands(JMolCommandsUtil.getCalculateSurfaceScript(atom));
 
@@ -313,9 +311,7 @@ public class PDBParser {
 				return atomList;
 			}
 
-			List<String> lines;
-
-			lines = getLinesStarting(ATOM);
+			List<String> lines = getLinesStarting(ATOM);
 
 			for (String string : lines) {
 				try {

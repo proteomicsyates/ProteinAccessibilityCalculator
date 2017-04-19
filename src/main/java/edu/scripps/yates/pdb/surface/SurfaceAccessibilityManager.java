@@ -68,7 +68,9 @@ public class SurfaceAccessibilityManager {
 		// load data from file if not yet
 		loadReportsFromFile();
 		// look into the map
-
+		if (protein.getAcc().equals("P09211")) {
+			System.out.println(protein);
+		}
 		log.debug("Getting surface accessibilities for protein: " + protein.getAcc());
 		final SurfaceAccessibilityProteinReport surfaceAccessibilityProteinReport = calculator
 				.getSurfaceAccesibilityFromProtein(protein);

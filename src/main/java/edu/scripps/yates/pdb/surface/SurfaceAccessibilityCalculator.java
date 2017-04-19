@@ -92,6 +92,9 @@ public class SurfaceAccessibilityCalculator {
 		for (SurfaceProtein protein : proteins) {
 			final Pair<String, String> acc = FastaParser.getACC(protein.getAcc());
 			if (acc != null && acc.getSecondElement().equals("UNIPROT")) {
+				if (acc.getFirstelement().equals("P09211")) {
+					System.out.println("asdf");
+				}
 				uniprotAccs.add(acc.getFirstelement());
 			}
 		}
@@ -169,6 +172,10 @@ public class SurfaceAccessibilityCalculator {
 			return null;
 		}
 		pdbParserManager.clearParsers();
+
+		if (protein.getAcc().equals("P09211")) {
+			System.out.println(removeOtherChains + "\t" + removeOtherMolecules);
+		}
 		final Set<SurfacePeptide> uniprotPeptides = protein.getPeptides();// getPeptides(uniprotProteinSeq);
 		final String acc = protein.getAcc();
 		SurfaceAccessibilityProteinReport proteinReport = new SurfaceAccessibilityProteinReport(acc, uniprotProteinSeq);
@@ -192,7 +199,7 @@ public class SurfaceAccessibilityCalculator {
 							positionsInUniprotProteinProcessed.add(positionInUniprotProtein);
 							// if it is already done, don't do it
 							if (proteinReport.containsReportsForPosition(positionInUniprotProtein)) {
-								continue;
+								// continue;
 							}
 							// get a list of ranked chains from the best to the
 							// worst proteinPDB structure
@@ -203,6 +210,9 @@ public class SurfaceAccessibilityCalculator {
 										+ acc);
 							}
 							for (Chain chain : chains) {
+								if (chain.getPdbID().equals("10GS")) {
+									System.out.println(chain);
+								}
 								PDBParser parser = pdbParserManager.getPDBParserByPDBID(chain.getPdbID());
 								if (parser != null) {
 									if (!parser.containsUniprotReference(acc)) {
@@ -240,10 +250,16 @@ public class SurfaceAccessibilityCalculator {
 				}
 			}
 		}
+		if (protein.getAcc().equals("P09211")) {
+			System.out.println(removeOtherChains + "\t" + removeOtherMolecules);
+		}
 		if (numCalculationsToDo > 0) {
 			log.info(numCalculationsToDo + " calculations to do for " + acc);
 		}
 		for (String pdbID : parametersByPDBID.keySet()) {
+			if (protein.getAcc().equals("P09211") && pdbID.equals("10GS")) {
+				log.info("adsf");
+			}
 			PDBParser parser = pdbParserManager.getPDBParserByPDBID(pdbID);
 			log.info("Using PDB model " + pdbID + " for protein " + acc);
 			if (parser != null) {
@@ -266,6 +282,9 @@ public class SurfaceAccessibilityCalculator {
 				}
 
 			}
+		}
+		if (protein.getAcc().equals("P09211")) {
+			System.out.println(removeOtherChains + "\t" + removeOtherMolecules);
 		}
 		if (!proteinReport.getReports().isEmpty() || numCalculationsToDo > 0) {
 			log.info("Surface accessibilities calculated for " + acc + " in " + proteinReport.getReports().size()

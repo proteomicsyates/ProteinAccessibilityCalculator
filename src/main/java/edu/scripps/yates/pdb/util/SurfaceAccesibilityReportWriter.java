@@ -27,8 +27,8 @@ public class SurfaceAccesibilityReportWriter {
 	 * @param b
 	 * @throws IOException
 	 */
-	public static void printReportForPsm(FileWriter fw, List<Ratio> ratios, List<String> ratioScoreNames, String psmID,
-			String peptideSequence, SurfaceAccessibilityProteinReport surfaceAccesibilityProteinReport, String aa,
+	public static void printReportForPsm(FileWriter fw, Ratio ratio, String psmID, String peptideSequence,
+			SurfaceAccessibilityProteinReport surfaceAccesibilityProteinReport, String aa,
 			boolean printOnlyTheMostAccessibleSite) throws IOException {
 		final String uniprotProteinSequence = surfaceAccesibilityProteinReport.getUniprotProteinSequence();
 		final int positionOfPeptideInProtein = uniprotProteinSequence.indexOf(peptideSequence);
@@ -41,9 +41,8 @@ public class SurfaceAccesibilityReportWriter {
 			if (surfaceAccesibilityReports != null) {
 				if (!printOnlyTheMostAccessibleSite) {
 					for (SiteSurfaceAccessibilityReport surfaceAccessibilityReport : surfaceAccesibilityReports) {
-						printReportForSite(fw, surfaceAccesibilityProteinReport.getUniprotACC(), ratios,
-								ratioScoreNames, psmID, peptideSequence, positionOfAAInPeptide, aa,
-								surfaceAccessibilityReport);
+						printReportForSite(fw, surfaceAccesibilityProteinReport.getUniprotACC(), ratio, psmID,
+								peptideSequence, positionOfAAInPeptide, aa, surfaceAccessibilityReport);
 					}
 				} else {
 					SiteSurfaceAccessibilityReport mostAccessibleSite = null;
@@ -54,8 +53,8 @@ public class SurfaceAccesibilityReportWriter {
 							mostAccessibleSite = surfaceAccessibilityReport;
 						}
 					}
-					printReportForSite(fw, surfaceAccesibilityProteinReport.getUniprotACC(), ratios, ratioScoreNames,
-							psmID, peptideSequence, positionOfAAInPeptide, aa, mostAccessibleSite);
+					printReportForSite(fw, surfaceAccesibilityProteinReport.getUniprotACC(), ratio, psmID,
+							peptideSequence, positionOfAAInPeptide, aa, mostAccessibleSite);
 				}
 			}
 		}
@@ -112,7 +111,7 @@ public class SurfaceAccesibilityReportWriter {
 
 	private static void printReportForSite(Writer fw, String accession, SurfacePeptide peptide,
 			int positionOfAAInPeptide, String aa, SiteSurfaceAccessibilityReport surfaceAccesibilityReport)
-			throws IOException {
+					throws IOException {
 		StringBuilder sb = new StringBuilder();
 		sb.append(peptide.getSequence()).append("\t").append(positionOfAAInPeptide).append("\t");
 
@@ -128,44 +127,16 @@ public class SurfaceAccesibilityReportWriter {
 		return "Peptide_seq\tPosition_in_peptide\tRatio\t" + SiteSurfaceAccessibilityReport.getToStringHeaders();
 	}
 
-	private static void printReportForSite(FileWriter fw, String accession, List<Ratio> ratios,
-			List<String> ratioScoreNames, String psmID, String peptideSequence, int positionOfAAInPeptide, String aa,
+	private static void printReportForSite(FileWriter fw, String accession, Ratio ratio, String psmID,
+			String peptideSequence, int positionOfAAInPeptide, String aa,
 			SiteSurfaceAccessibilityReport surfaceAccesibilityReport) throws IOException {
 		StringBuilder sb = new StringBuilder();
 		sb.append(accession).append("\t").append(psmID).append("\t").append(peptideSequence).append("\t")
 				.append(positionOfAAInPeptide).append("\t").append(surfaceAccesibilityReport).append("\t");
 
-		for (Ratio ratio : ratios) {
-			if (ratio.getDescription().equals("AREA_RATIO")) {
-				final double value = ratio.getValue();
-				String ratioString = printRatio(value);
-				sb.append(ratioString).append("\t");
-				for (String scoreName : ratioScoreNames) {
-					if (ratio.getAssociatedConfidenceScore() != null
-							&& ratio.getAssociatedConfidenceScore().getScoreName().equals(scoreName)) {
-						sb.append(ratio.getAssociatedConfidenceScore().getValue()).append("\t");
-					} else {
-						sb.append("\t");
-					}
-				}
-			}
-
-		}
-		for (Ratio ratio : ratios) {
-			if (ratio.getDescription().equals("RATIO")) {
-				final double value = ratio.getValue();
-				String ratioString = printRatio(value);
-				sb.append(ratioString).append("\t");
-				for (String scoreName : ratioScoreNames) {
-					if (ratio.getAssociatedConfidenceScore() != null
-							&& ratio.getAssociatedConfidenceScore().getScoreName().equals(scoreName)) {
-						sb.append(ratio.getAssociatedConfidenceScore().getValue()).append("\t");
-					} else {
-						sb.append("\t");
-					}
-				}
-			}
-		}
+		final double value = ratio.getValue();
+		String ratioString = printRatio(value);
+		sb.append(ratioString);
 		sb.append("\n");
 		fw.write(sb.toString());
 

@@ -10,7 +10,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +19,7 @@ import java.util.stream.Collectors;
 
 import org.junit.Test;
 
+import edu.scripps.yates.annotations.go.GORetriever;
 import edu.scripps.yates.annotations.uniprot.UniprotProteinLocalRetriever;
 import edu.scripps.yates.annotations.uniprot.UniprotProteinRetrievalSettings;
 import edu.scripps.yates.annotations.uniprot.xml.Entry;
@@ -45,6 +45,7 @@ import edu.scripps.yates.utilities.proteomicsmodel.Project;
 import edu.scripps.yates.utilities.proteomicsmodel.Protein;
 import edu.scripps.yates.utilities.proteomicsmodel.Ratio;
 import edu.scripps.yates.utilities.strings.StringUtils;
+import psidev.psi.tools.ontology_manager.interfaces.OntologyTermI;
 
 public class SurfaceAccesibilityTest {
 
@@ -173,20 +174,18 @@ public class SurfaceAccesibilityTest {
 							discardedContainingMoreThanOneK++;
 							continue;
 						}
-						List<Ratio> ratios = new ArrayList<Ratio>();
-						ratios.addAll(psm.getRatios());
-						if (ratios.isEmpty()) {
+						Ratio ratio = null;
+						for (Ratio ratio2 : psm.getRatios()) {
+							if (ratio2.getDescription().equals("AREA_RATIO")) {
+								ratio = ratio2;
+							}
+						}
+						if (ratio == null) {
 							psmsWithAANoRatios++;
 							continue;
 						}
 						validPSMs++;
-						Collections.sort(ratios, new Comparator<Ratio>() {
 
-							@Override
-							public int compare(Ratio o1, Ratio o2) {
-								return o1.getDescription().compareTo(o2.getDescription());
-							}
-						});
 						Set<String> accs = getProteinAccessions(psm.getProteins());
 						totalProteins.addAll(accs);
 						for (String acc : accs) {
@@ -194,8 +193,8 @@ public class SurfaceAccesibilityTest {
 								peptideSequencesValid.add(peptideSequence);
 								final SurfaceAccessibilityProteinReport surfaceAccesibilityProteinReport = surfaceAccesibilityFromProteins
 										.get(acc);
-								SurfaceAccesibilityReportWriter.printReportForPsm(fw, ratios, ratioScoreNames,
-										psm.getPSMIdentifier(), peptideSequence, surfaceAccesibilityProteinReport, aa,
+								SurfaceAccesibilityReportWriter.printReportForPsm(fw, ratio, psm.getPSMIdentifier(),
+										peptideSequence, surfaceAccesibilityProteinReport, aa,
 										printOnlyTheMostAccessibleSite);
 								uniquePositionsValid
 										.addAll(surfaceAccesibilityProteinReport.getUniquePositionsInProteinKeys());
@@ -286,20 +285,18 @@ public class SurfaceAccesibilityTest {
 							discardedContainingMoreThanOneK++;
 							continue;
 						}
-						List<Ratio> ratios = new ArrayList<Ratio>();
-						ratios.addAll(psm.getRatios());
-						if (ratios.isEmpty()) {
+						Ratio ratio = null;
+						for (Ratio ratio2 : psm.getRatios()) {
+							if (ratio2.getDescription().equals("AREA_RATIO")) {
+								ratio = ratio2;
+							}
+						}
+						if (ratio == null) {
 							psmsWithAANoRatios++;
 							continue;
 						}
 						validPSMs++;
-						Collections.sort(ratios, new Comparator<Ratio>() {
 
-							@Override
-							public int compare(Ratio o1, Ratio o2) {
-								return o1.getDescription().compareTo(o2.getDescription());
-							}
-						});
 						Set<String> accs = getProteinAccessions(psm.getProteins());
 						totalProteins.addAll(accs);
 						for (String acc : accs) {
@@ -307,8 +304,8 @@ public class SurfaceAccesibilityTest {
 								peptideSequencesValid.add(peptideSequence);
 								final SurfaceAccessibilityProteinReport surfaceAccesibilityProteinReport = surfaceAccesibilityFromProteins
 										.get(acc);
-								SurfaceAccesibilityReportWriter.printReportForPsm(fw, ratios, ratioScoreNames,
-										psm.getPSMIdentifier(), peptideSequence, surfaceAccesibilityProteinReport, aa,
+								SurfaceAccesibilityReportWriter.printReportForPsm(fw, ratio, psm.getPSMIdentifier(),
+										peptideSequence, surfaceAccesibilityProteinReport, aa,
 										printOnlyTheMostAccessibleSite);
 								uniquePositionsValid
 										.addAll(surfaceAccesibilityProteinReport.getUniquePositionsInProteinKeys());
@@ -340,16 +337,24 @@ public class SurfaceAccesibilityTest {
 
 	@Test
 	public void surfaceAccesibilityFromRemoteFiles_DNABinding_FromTable() {
+		String GO = "GO:0003677";
+		boolean filterByAnnotation = true;
 		// Double minRatio = -Double.MAX_VALUE;
 		Double minRatio = 0.0;
 		// this gets the experimental data from a table
-		File outputFile = new File("z:\\share\\Salva\\data\\PINT projects\\molecular painting\\surface_DNABinding.csv");
+		OntologyTermI goTerm = new GORetriever(new File("z:\\share\\Salva\\data\\go")).getGOTermByID(GO);
+		String goName = "";
+		if (goTerm != null) {
+			goName = goTerm.getPreferredName();
+		}
+		File outputFile = new File("z:\\share\\Salva\\data\\PINT projects\\molecular painting\\surface_" + goName
+				+ "_ratio_gte=" + minRatio + ".csv");
 		final File uniprotReleasesFolder = new File("z:\\share\\Salva\\data\\uniprotKB");
 		UniprotProteinLocalRetriever uplr = new UniprotProteinLocalRetriever(uniprotReleasesFolder, true);
 		UniprotProteinRetrievalSettings.getInstance(uniprotReleasesFolder, true);
 		File pdbFolder = new File("z:\\share\\Salva\\data\\pdb");
 		File experimentalDataFile = new File(
-				"z:\\share\\Salva\\data\\PINT projects\\molecular painting\\accessible_experimental_proteins.csv");
+				"z:\\share\\Salva\\data\\PINT projects\\molecular painting\\experimental_proteins.csv");
 		try {
 			Set<String> psmIds = new HashSet<String>();
 			Set<String> peptideSequences = new HashSet<String>();
@@ -362,19 +367,30 @@ public class SurfaceAccesibilityTest {
 			List<String> seqs = FileUtils.readColumnFromTextFile(experimentalDataFile, ",", 1, true);
 			List<String> ratios = FileUtils.readColumnFromTextFile(experimentalDataFile, ",", 2, true);
 			Map<String, SurfaceProtein> surfaceProteinMap = new HashMap<String, SurfaceProtein>();
+			Map<String, Entry> annotatedProteins = uplr.getAnnotatedProteins(null, accs);
+
 			for (int i = 0; i < accs.size(); i++) {
 
 				Double ratio = Double.valueOf(ratios.get(i));
 				if (ratio >= minRatio) {
-					totalProteins.add(accs.get(i));
+					String acc = accs.get(i);
+					Entry entry = annotatedProteins.get(acc);
+					if (entry != null) {
+						List<String> query = JAXBXPathQuery.query(entry, "dbReference$id=" + GO, "$id");
+						boolean containsAnnotation = !query.isEmpty();
+						if (filterByAnnotation && !containsAnnotation) {
+							continue;
+						}
+					}
+					totalProteins.add(acc);
 					SurfacePeptide peptide = new SurfacePeptide(seqs.get(i), ratio);
 					surfacePeptides.add(peptide);
-					if (surfaceProteinMap.containsKey(accs.get(i))) {
-						surfaceProteinMap.get(accs.get(i)).addPeptide(peptide);
+					if (surfaceProteinMap.containsKey(acc)) {
+						surfaceProteinMap.get(acc).addPeptide(peptide);
 					} else {
-						SurfaceProtein protein = new SurfaceProtein(accs.get(i));
+						SurfaceProtein protein = new SurfaceProtein(acc);
 						protein.addPeptide(peptide);
-						surfaceProteinMap.put(accs.get(i), protein);
+						surfaceProteinMap.put(acc, protein);
 					}
 				}
 
@@ -462,13 +478,14 @@ public class SurfaceAccesibilityTest {
 
 	private void run(Collection<SurfacePeptide> surfacePeptides, Map<String, SurfaceProtein> surfaceProteinMap,
 			SurfaceAccessibilityCalculator calc, FileWriter fw, Set<String> peptideSequences, String aa)
-			throws IOException {
+					throws IOException {
 		printHeader(fw, null);
 		SurfaceAccessibilityManager manager = new SurfaceAccessibilityManager(calc);
 		manager.setCalculateIfNotPresent(true);
 		final Map<String, SurfaceAccessibilityProteinReport> surfaceAccesibilityFromProteins = manager
 				.getSurfaceAccesibilityFromProteins(surfaceProteinMap.values());
-
+		System.out.println(
+				surfaceAccesibilityFromProteins.size() + " reports for " + surfaceProteinMap.size() + " proteins");
 		for (SurfacePeptide surfacePeptide : surfacePeptides) {
 			final String peptideSequence = surfacePeptide.getSequence();
 
@@ -487,10 +504,8 @@ public class SurfaceAccesibilityTest {
 				if (surfaceAccesibilityFromProteins.containsKey(acc)) {
 					final SurfaceAccessibilityProteinReport surfaceAccesibilityProteinReport = surfaceAccesibilityFromProteins
 							.get(acc);
-					List<Ratio> ratioSet = new ArrayList<Ratio>();
 					RatioEx ratio = new RatioEx(surfacePeptide.getRatio(), null, null, "ratio", AggregationLevel.PSM);
-					ratioSet.add(ratio);
-					SurfaceAccesibilityReportWriter.printReportForPsm(fw, ratioSet, null,
+					SurfaceAccesibilityReportWriter.printReportForPsm(fw, ratio,
 							String.valueOf(surfacePeptide.hashCode()), peptideSequence,
 							surfaceAccesibilityProteinReport, aa, false);
 				}
@@ -624,20 +639,18 @@ public class SurfaceAccesibilityTest {
 							discardedContainingMoreThanOneK++;
 							continue;
 						}
-						List<Ratio> ratios = new ArrayList<Ratio>();
-						ratios.addAll(psm.getRatios());
-						if (ratios.isEmpty()) {
+						Ratio ratio = null;
+						for (Ratio ratio2 : psm.getRatios()) {
+							if (ratio2.getDescription().equals("AREA_RATIO")) {
+								ratio = ratio2;
+							}
+						}
+						if (ratio == null) {
 							psmsWithAANoRatios++;
 							continue;
 						}
 						validPSMs++;
-						Collections.sort(ratios, new Comparator<Ratio>() {
 
-							@Override
-							public int compare(Ratio o1, Ratio o2) {
-								return o1.getDescription().compareTo(o2.getDescription());
-							}
-						});
 						Set<String> accs = getProteinAccessions(psm.getProteins());
 						totalProteins.addAll(accs);
 						for (String acc : accs) {
@@ -645,9 +658,8 @@ public class SurfaceAccesibilityTest {
 								peptideSequencesValid.add(peptideSequence);
 								final SurfaceAccessibilityProteinReport surfaceAccesibilityProteinReport = surfaceAccesibilityFromProteins
 										.get(acc);
-								SurfaceAccesibilityReportWriter.printReportForPsm(fw, ratios, ratioScoreNames,
-										psm.getPSMIdentifier(), peptideSequence, surfaceAccesibilityProteinReport, aa,
-										true);
+								SurfaceAccesibilityReportWriter.printReportForPsm(fw, ratio, psm.getPSMIdentifier(),
+										peptideSequence, surfaceAccesibilityProteinReport, aa, true);
 								final List<String> uniquePositionsInProteinKeys = surfaceAccesibilityProteinReport
 										.getUniquePositionsInProteinKeys();
 								uniquePositionsValid.addAll(uniquePositionsInProteinKeys);

@@ -389,11 +389,12 @@ public class SurfaceAccessibilityCalculator {
 	public static String getStatistics() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(numPDBStructuresList.size() + " proteins analyzed\n");
-		double mean = Maths.mean(numPDBStructuresList.toArray(new Integer[0]));
-		double stddev = Maths.stddev(numPDBStructuresList.toArray(new Integer[0]));
-		double sum = Maths.sum((numPDBStructuresList.toArray(new Double[0])));
+		double mean = Maths.mean(numPDBStructuresList.toArray(new Double[0]));
+		double stddev = Maths.stddev(numPDBStructuresList.toArray(new Double[0]));
+		double sum = Maths.sum(numPDBStructuresList.toArray(new Double[0]));
+		double max = Maths.max(numPDBStructuresList.toArray(new Double[0]));
 		sb.append(sum + " total PDB structures matched\n" + mean + "(" + stddev
-				+ ") structures matched per protein in average (stdev)");
+				+ ") structures matched per protein in average (stdev). Max=" + max);
 		return sb.toString();
 	}
 

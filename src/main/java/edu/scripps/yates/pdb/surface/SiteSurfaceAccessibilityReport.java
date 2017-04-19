@@ -123,11 +123,13 @@ public class SiteSurfaceAccessibilityReport {
 			// // get the rest of the splitted items to construct the Atom
 			// object
 			StringBuilder sb = new StringBuilder();
-			sb.append(split[7] + sep + atomType + sep + split[9]);
+			String chainID = split[9];
+			String atomNumber = split[7];
+			sb.append(atomNumber + sep + atomType + sep + chainID);
 			Boolean removeOtherChains = Boolean.valueOf(split[10]);
-			Boolean removeOtherMolecules = Boolean.valueOf(split[10]);
-			Boolean containsMutation = Boolean.valueOf(split[11]);
-			String method = split[12];
+			Boolean removeOtherMolecules = Boolean.valueOf(split[11]);
+			Boolean containsMutation = Boolean.valueOf(split[12]);
+			String method = split[13];
 			// for (int i = 8; i < split.length; i++) {
 			// sb.append(split[i]).append(sep);
 			// }

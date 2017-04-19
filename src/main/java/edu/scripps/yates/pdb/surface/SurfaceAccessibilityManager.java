@@ -203,8 +203,7 @@ public class SurfaceAccessibilityManager {
 						}
 					}
 					loaded = true;
-					log.info("Surface accesibilities numbers loaded from local file for " + reports.size()
-							+ " proteins");
+					log.info("Surface accesibilities numbers loaded from local file for " + reports.size() + " sites");
 				}
 			} catch (IOException e) {
 				e.printStackTrace();

@@ -21,6 +21,8 @@ import org.apache.log4j.Logger;
 
 import edu.scripps.yates.annotations.uniprot.xml.Entry;
 import edu.scripps.yates.pdb.model.SurfaceProtein;
+import edu.scripps.yates.utilities.progresscounter.ProgressCounter;
+import edu.scripps.yates.utilities.progresscounter.ProgressPrintingType;
 
 /**
  * Class that manages the surface accessibility reports in a parsistence layer,
@@ -43,6 +45,7 @@ public class SurfaceAccessibilityManager {
 
 	public SurfaceAccessibilityManager(SurfaceAccessibilityCalculator calc) {
 		calculator = calc;
+		calculator.setManager(this);
 		surfaceAccessibilityFile = new File(
 				calc.getPdbParserManager().getPdbFileManager().getParentPath().getAbsolutePath() + File.separator
 						+ FILE_NAME);
@@ -65,24 +68,34 @@ public class SurfaceAccessibilityManager {
 		// load data from file if not yet
 		loadReportsFromFile();
 		// look into the map
-		if (!reports.containsKey(protein.getAcc()) && calculateIfNotPresent) {
-			log.debug("Getting surface accessibilities for protein: " + protein.getAcc());
-			final SurfaceAccessibilityProteinReport surfaceAccessibilityProteinReport = calculator
-					.getSurfaceAccesibilityFromProtein(protein);
-			if (surfaceAccessibilityProteinReport != null) {
 
-				for (Set<SiteSurfaceAccessibilityReport> reports : surfaceAccessibilityProteinReport
-						.getAccessibilitiesByPositionInUniprotSeq().values()) {
-					for (SiteSurfaceAccessibilityReport surfaceAccessibilityReport : reports) {
-						addReport(surfaceAccessibilityReport);
-					}
-				}
-				if (!surfaceAccessibilityProteinReport.getAccessibilitiesByPositionInUniprotSeq().isEmpty()) {
-					appendReportToFile(surfaceAccessibilityProteinReport);
+		log.debug("Getting surface accessibilities for protein: " + protein.getAcc());
+		final SurfaceAccessibilityProteinReport surfaceAccessibilityProteinReport = calculator
+				.getSurfaceAccesibilityFromProtein(protein);
+		if (surfaceAccessibilityProteinReport != null) {
+
+			for (Set<SiteSurfaceAccessibilityReport> reports : surfaceAccessibilityProteinReport
+					.getAccessibilitiesByPositionInUniprotSeq().values()) {
+				for (SiteSurfaceAccessibilityReport surfaceAccessibilityReport : reports) {
+					addReport(surfaceAccessibilityReport);
 				}
 			}
+			if (!surfaceAccessibilityProteinReport.getAccessibilitiesByPositionInUniprotSeq().isEmpty()) {
+				appendReportToFile(surfaceAccessibilityProteinReport);
+			}
+			return surfaceAccessibilityProteinReport;
 		}
-		return reports.get(protein.getAcc());
+		return null;
+
+	}
+
+	public SurfaceAccessibilityProteinReport getProteinAccessibilityReportByProtein(String reportKey) {
+		// load data from file if not yet
+		loadReportsFromFile();
+		// look into the map
+
+		return reports.get(reportKey);
+
 	}
 
 	private void appendReportToFile(SurfaceAccessibilityProteinReport surfaceAccessibilityProteinReport) {
@@ -93,13 +106,13 @@ public class SurfaceAccessibilityManager {
 				// write the header = true
 				writeHeader = true;
 			}
-			log.info("Appending report of protein " + surfaceAccessibilityProteinReport.getUniprotACC() + " to file");
 			FileWriter fw = new FileWriter(surfaceAccessibilityFile, true);
 			BufferedWriter bw = new BufferedWriter(fw);
 			out = new PrintWriter(bw);
 			if (writeHeader) {
 				out.println(SiteSurfaceAccessibilityReport.getToStringHeaders());
 			}
+			boolean firstOne = false;
 			final Map<Integer, Set<SiteSurfaceAccessibilityReport>> positions = surfaceAccessibilityProteinReport
 					.getAccessibilitiesByPositionInUniprotSeq();
 			List<Integer> sortedPositions = new ArrayList<Integer>();
@@ -108,11 +121,19 @@ public class SurfaceAccessibilityManager {
 			for (Integer position : sortedPositions) {
 				final Set<SiteSurfaceAccessibilityReport> reports = positions.get(position);
 				for (SiteSurfaceAccessibilityReport surfaceAccessibilityReport : reports) {
-					out.println(surfaceAccessibilityReport.toString());
+					if (!surfaceAccessibilityReport.isStored()) {
+						if (!firstOne) {
+							log.info("Appending report of protein " + surfaceAccessibilityProteinReport.getUniprotACC()
+									+ " to file");
+							firstOne = true;
+						}
+						out.println(surfaceAccessibilityReport.toString());
+					}
 				}
 			}
-
-			log.info("Report appended to file");
+			if (firstOne) {
+				log.info("Report appended to file");
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -129,16 +150,16 @@ public class SurfaceAccessibilityManager {
 		PrintWriter out = null;
 		try {
 			log.info("Writting into file reports for " + reports.size() + " proteins");
-			FileWriter fw = new FileWriter(surfaceAccessibilityFile, false);
+			FileWriter fw = new FileWriter(surfaceAccessibilityFile, true);
 			BufferedWriter bw = new BufferedWriter(fw);
 			out = new PrintWriter(bw);
 			// write headers
 			out.println(SiteSurfaceAccessibilityReport.getToStringHeaders());
-			List<String> sortedAccessions = new ArrayList<String>();
-			sortedAccessions.addAll(reports.keySet());
-			Collections.sort(sortedAccessions);
-			for (String proteinAcc : sortedAccessions) {
-				final SurfaceAccessibilityProteinReport surfaceAccessibilityProteinReport = reports.get(proteinAcc);
+			List<String> keys = new ArrayList<String>();
+			keys.addAll(reports.keySet());
+			Collections.sort(keys);
+			for (String key : keys) {
+				final SurfaceAccessibilityProteinReport surfaceAccessibilityProteinReport = reports.get(key);
 				final Map<Integer, Set<SiteSurfaceAccessibilityReport>> positions = surfaceAccessibilityProteinReport
 						.getAccessibilitiesByPositionInUniprotSeq();
 				List<Integer> sortedPositions = new ArrayList<Integer>();
@@ -177,6 +198,7 @@ public class SurfaceAccessibilityManager {
 						}
 						SiteSurfaceAccessibilityReport report = parseFromLine(strLine);
 						if (report != null) {
+							report.setStored(true);
 							addReport(report);
 						}
 					}
@@ -201,8 +223,9 @@ public class SurfaceAccessibilityManager {
 	}
 
 	private void addReport(SiteSurfaceAccessibilityReport report) {
-		if (reports.containsKey(report.getUniprotACC())) {
-			reports.get(report.getUniprotACC()).addSurfaceAccesibilityReport(report);
+		String key = report.getReportKey();
+		if (reports.containsKey(key)) {
+			reports.get(key).addSurfaceAccesibilityReport(report);
 		} else {
 			final Map<String, Entry> annotatedProtein = calculator.getUplr().getAnnotatedProtein(null,
 					report.getUniprotACC());
@@ -213,7 +236,7 @@ public class SurfaceAccessibilityManager {
 					SurfaceAccessibilityProteinReport proteinReport = new SurfaceAccessibilityProteinReport(
 							report.getUniprotACC(), proteinSequence);
 					proteinReport.addSurfaceAccesibilityReport(report);
-					reports.put(report.getUniprotACC(), proteinReport);
+					reports.put(key, proteinReport);
 				}
 			}
 		}
@@ -224,31 +247,25 @@ public class SurfaceAccessibilityManager {
 	}
 
 	public Map<String, SurfaceAccessibilityProteinReport> getSurfaceAccesibilityFromProteins(
-			Set<SurfaceProtein> proteins) {
+			Collection<SurfaceProtein> proteins) {
 		Map<String, SurfaceAccessibilityProteinReport> ret = new HashMap<String, SurfaceAccessibilityProteinReport>();
-		int counter = 0;
-		int percentage = 0;
+
+		ProgressCounter counter = new ProgressCounter(proteins.size(), ProgressPrintingType.PERCENTAGE_STEPS, 1);
 		for (SurfaceProtein protein : proteins) {
-			int newPercentage = counter * 100 / proteins.size();
-			if (newPercentage != percentage) {
-				log.info(newPercentage + "% of proteins analyzed");
-				percentage = newPercentage;
+			counter.increment();
+			String printIfNecessary = counter.printIfNecessary();
+			if (!"".equals(printIfNecessary)) {
+				log.info(printIfNecessary);
 			}
+
 			final SurfaceAccessibilityProteinReport report = getProteinAccessibilityReportByProtein(protein);
 			if (report != null) {
 				ret.put(protein.getAcc(), report);
 				// dumpToFile();
 			}
-			counter++;
+
 		}
 		return ret;
-	}
-
-	/**
-	 * @return the calculateIfNotPresent
-	 */
-	public boolean isCalculateIfNotPresent() {
-		return calculateIfNotPresent;
 	}
 
 	/**

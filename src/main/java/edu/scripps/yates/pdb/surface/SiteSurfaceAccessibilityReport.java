@@ -16,11 +16,17 @@ public class SiteSurfaceAccessibilityReport {
 	private final String uniprotACC;
 	private final int positionInUniprot;
 	private final Atom atom;
-	private final float resolution;
+	private final Float resolution;
 	private final static String sep = "\t";
+	private final boolean otherChainsRemoved;
+	private final boolean otherMoleculesRemoved;
+	private final boolean mutation;
+	private final String method;
+	private boolean stored = false;
 
 	public SiteSurfaceAccessibilityReport(String pdbID, double accesibility, String aa, Atom atom, AtomType atomType,
-			int positionInPDB, String uniprotACC, int positionInUniprot, float resolution) {
+			int positionInPDB, String uniprotACC, int positionInUniprot, Float resolution, boolean otherChainsRemoved,
+			boolean otherMoleculesRemoved, boolean mutation, String method) {
 		super();
 		this.pdbID = pdbID;
 		this.accesibility = accesibility;
@@ -31,6 +37,10 @@ public class SiteSurfaceAccessibilityReport {
 		this.uniprotACC = uniprotACC;
 		this.positionInUniprot = positionInUniprot;
 		this.resolution = resolution;
+		this.otherChainsRemoved = otherChainsRemoved;
+		this.otherMoleculesRemoved = otherMoleculesRemoved;
+		this.mutation = mutation;
+		this.method = method;
 	}
 
 	/**
@@ -72,7 +82,8 @@ public class SiteSurfaceAccessibilityReport {
 
 		sb.append(accesibility).append(sep).append(aa).append(sep).append(pdbID).append(sep).append(positionInPDB)
 				.append(sep).append(uniprotACC).append(sep).append(positionInUniprot).append(sep).append(resolution)
-				.append(sep).append(atom.toString());
+				.append(sep).append(atom.toString()).append(sep).append(otherChainsRemoved).append(sep)
+				.append(otherMoleculesRemoved).append(sep).append(mutation).append(sep).append(getMethod());
 		return sb.toString();
 	}
 
@@ -80,7 +91,9 @@ public class SiteSurfaceAccessibilityReport {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Surface_accessibility").append(sep).append("AA").append(sep).append("pdb_ID").append(sep)
 				.append("position_in_PDB").append(sep).append("uniprot_ACC").append(sep).append("position_in_uniprot")
-				.append(sep).append("resolution").append(sep).append(Atom.getToStringHeaders());
+				.append(sep).append("resolution").append(sep).append(Atom.getToStringHeaders()).append(sep)
+				.append("OtherChainsRemoved").append(sep).append("OtherMoleculesRemoved").append(sep).append("Mutated")
+				.append(sep).append("Method");
 		return sb.toString();
 	}
 
@@ -96,22 +109,37 @@ public class SiteSurfaceAccessibilityReport {
 
 			double accesibility = Double.valueOf(split[0]);
 			String aa = split[1];
-			AtomType atomType = AtomType.getByName(split[2]);
-			String pdbID = split[3];
-			int positionInPDB = Integer.valueOf(split[4]);
-			String uniprotACC = split[5];
-			int positionInUniprot = Integer.valueOf(split[6]);
-			float resolution = Float.valueOf(split[7]);
-			// get the rest of the splitted items to construct the Atom object
-			StringBuilder sb = new StringBuilder();
-			for (int i = 8; i < split.length; i++) {
-				sb.append(split[i]).append(sep);
+
+			String pdbID = split[2];
+			int positionInPDB = Integer.valueOf(split[3]);
+			String uniprotACC = split[4];
+			int positionInUniprot = Integer.valueOf(split[5]);
+			Float resolution = null;
+			try {
+				resolution = Float.valueOf(split[6]);
+			} catch (Exception e) {
 			}
+			AtomType atomType = AtomType.getByName(split[8]);
+			// // get the rest of the splitted items to construct the Atom
+			// object
+			StringBuilder sb = new StringBuilder();
+			sb.append(split[7] + sep + atomType + sep + split[9]);
+			Boolean removeOtherChains = Boolean.valueOf(split[10]);
+			Boolean removeOtherMolecules = Boolean.valueOf(split[10]);
+			Boolean containsMutation = Boolean.valueOf(split[11]);
+			String method = split[12];
+			// for (int i = 8; i < split.length; i++) {
+			// sb.append(split[i]).append(sep);
+			// }
+			// Atom atom = Atom.getFromString(sb.toString(), aa, positionInPDB);
 			Atom atom = Atom.getFromString(sb.toString(), aa, positionInPDB);
 			SiteSurfaceAccessibilityReport report = new SiteSurfaceAccessibilityReport(pdbID, accesibility, aa, atom,
-					atomType, positionInPDB, uniprotACC, positionInUniprot, resolution);
+					atomType, positionInPDB, uniprotACC, positionInUniprot, resolution, removeOtherChains,
+					removeOtherMolecules, containsMutation, method);
 			return report;
-		} catch (Exception e) {
+		} catch (
+
+		Exception e) {
 			e.printStackTrace();
 			return null;
 		}
@@ -139,7 +167,7 @@ public class SiteSurfaceAccessibilityReport {
 	/**
 	 * @return the resolution
 	 */
-	public float getResolution() {
+	public Float getResolution() {
 		return resolution;
 	}
 
@@ -154,5 +182,35 @@ public class SiteSurfaceAccessibilityReport {
 				.add("positionInUniprot", positionInUniprot).add("positionInPDB", positionInPDB)
 				.add("resolution", resolution).add("pdbID", pdbID);
 		return objectBuilder.build();
+	}
+
+	public boolean isOtherChainsRemoved() {
+		return otherChainsRemoved;
+	}
+
+	public boolean isOtherMoleculesRemoved() {
+		return otherMoleculesRemoved;
+	}
+
+	public boolean isMutation() {
+		return mutation;
+	}
+
+	public String getMethod() {
+		return method;
+	}
+
+	public String getReportKey() {
+		String string = uniprotACC + "-" + getAa() + "-" + getPdbID() + "-" + getAtom().getChainID() + "-"
+				+ getAtomType() + "-" + isOtherChainsRemoved() + "-" + isOtherMoleculesRemoved();
+		return string;
+	}
+
+	public boolean isStored() {
+		return stored;
+	}
+
+	public void setStored(boolean stored) {
+		this.stored = stored;
 	}
 }

@@ -25,4 +25,8 @@ public class SurfaceProtein {
 		return peptides;
 	}
 
+	public void addPeptide(SurfacePeptide peptide) {
+		this.peptides.add(peptide);
+		peptide.addProtein(this);
+	}
 }

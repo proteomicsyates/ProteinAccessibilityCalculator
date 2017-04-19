@@ -12,9 +12,12 @@ public class SurfaceAccebilityInputParameters {
 	private final int positionInPeptide;
 	private final String uniprotACC;
 	private String pdbID;
+	private final boolean removeOtherChains;
+	private boolean removeOtherMolecules;
 
 	public SurfaceAccebilityInputParameters(String aa, AtomType atomType, int positionInUniprotProtein, Chain chain,
-			String uniprotPeptideSeq, int positionInPeptide, String uniprotACC) {
+			String uniprotPeptideSeq, int positionInPeptide, String uniprotACC, boolean removeOtherChains,
+			boolean removeOtherMolecules) {
 		super();
 		this.aa = aa;
 		this.atomType = atomType;
@@ -26,15 +29,20 @@ public class SurfaceAccebilityInputParameters {
 		if (chain != null) {
 			pdbID = chain.getPdbID();
 		}
+		this.removeOtherChains = removeOtherChains;
+		this.removeOtherMolecules = removeOtherMolecules;
 
 	}
 
-	public SurfaceAccebilityInputParameters(String aa, AtomType atomType, String pdbID, String chainID) {
-		this(aa, atomType, -1, new Chain(pdbID, chainID + "=0-0", -1.0f), null, -1, null);
+	public SurfaceAccebilityInputParameters(String aa, AtomType atomType, String pdbID, String chainID,
+			boolean removeOtherChains, boolean removeOtherMolecules) {
+		this(aa, atomType, -1, new Chain(pdbID, chainID + "=0-0", -1.0f), null, -1, null, removeOtherChains,
+				removeOtherMolecules);
 	}
 
-	public SurfaceAccebilityInputParameters(String aa, AtomType atomType, String pdbID) {
-		this(aa, atomType, -1, null, null, -1, null);
+	public SurfaceAccebilityInputParameters(String aa, AtomType atomType, String pdbID, boolean removeOtherChains,
+			boolean removeOtherMolecules) {
+		this(aa, atomType, -1, null, null, -1, null, removeOtherChains, removeOtherMolecules);
 		this.pdbID = pdbID;
 	}
 
@@ -91,4 +99,16 @@ public class SurfaceAccebilityInputParameters {
 		return uniprotACC;
 	}
 
+	public boolean isRemoveOtherChains() {
+		return removeOtherChains;
+	}
+
+	public boolean isRemoveOtherMolecules() {
+		return removeOtherMolecules;
+	}
+
+	public String getReportKey() {
+		return uniprotACC + "-" + getAa() + "-" + getPdbID() + "-" + getChain().getIdentifier() + "-" + getAtomType()
+				+ "-" + removeOtherChains + "-" + removeOtherMolecules;
+	}
 }

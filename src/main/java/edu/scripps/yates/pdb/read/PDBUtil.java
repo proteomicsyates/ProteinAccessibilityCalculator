@@ -1,6 +1,5 @@
 package edu.scripps.yates.pdb.read;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -80,7 +79,7 @@ public class PDBUtil {
 		return null;
 	}
 
-	public static DBRef getDBRef(PDBParser parser, String chainID) throws IOException {
+	public static DBRef getDBRef(PDBParser parser, String chainID) {
 		if (parser != null) {
 			Set<String> individualChainIDs = new HashSet<String>();
 			if (chainID.contains("/")) {

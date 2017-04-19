@@ -1,7 +1,6 @@
 package edu.scripps.yates.pdb.surface;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -21,7 +20,6 @@ import edu.scripps.yates.pdb.model.AtomType;
 import edu.scripps.yates.pdb.model.Chain;
 import edu.scripps.yates.pdb.model.SurfacePeptide;
 import edu.scripps.yates.pdb.model.SurfaceProtein;
-import edu.scripps.yates.pdb.read.NotValidPDBException;
 import edu.scripps.yates.pdb.read.PDBParser;
 import edu.scripps.yates.pdb.read.PDBParserManager;
 import edu.scripps.yates.pdb.read.PDBUtil;
@@ -140,12 +138,9 @@ public class SurfaceAccessibilityCalculator {
 
 				log.info("Using PDB model " + pdbID);
 
-				Map<String, SiteSurfaceAccessibilityReport> siteReports = null;
-				try {
-					siteReports = parser.getSiteSurfaceAccesibilityFromParameters(inputParameters);
-				} catch (IOException | NotValidPDBException e) {
-					// not do anything
-				}
+				Map<String, SiteSurfaceAccessibilityReport> siteReports = parser
+						.getSiteSurfaceAccesibilityFromParameters(inputParameters);
+
 				if (siteReports != null) {
 					for (String key : siteReports.keySet()) {
 						proteinReport.addSurfaceAccesibilityReport(siteReports.get(key));
@@ -260,12 +255,8 @@ public class SurfaceAccessibilityCalculator {
 				for (SurfaceAccebilityInputParameters surfaceAccebilityInputParameters : list) {
 					log.debug("Using PDB model " + pdbID + " for protein " + acc + " position "
 							+ surfaceAccebilityInputParameters.getPositionInUniprotProtein());
-					Map<String, SiteSurfaceAccessibilityReport> siteReports = null;
-					try {
-						siteReports = parser.getSiteSurfaceAccesibilityFromParameters(surfaceAccebilityInputParameters);
-					} catch (IOException | NotValidPDBException e) {
-						// not do anything
-					}
+					Map<String, SiteSurfaceAccessibilityReport> siteReports = parser
+							.getSiteSurfaceAccesibilityFromParameters(surfaceAccebilityInputParameters);
 					if (siteReports != null) {
 						for (String key : siteReports.keySet()) {
 							proteinReport.addSurfaceAccesibilityReport(siteReports.get(key));

@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +79,7 @@ public class PDBParser {
 	}
 
 	public Map<String, SiteSurfaceAccessibilityReport> getSiteSurfaceAccesibilityFromParameters(
-			SurfaceAccebilityInputParameters inputParameters) throws IOException, NotValidPDBException {
+			SurfaceAccebilityInputParameters inputParameters) {
 		if (inputParameters.getUniprotACC() != null) {
 			Map<String, SiteSurfaceAccessibilityReport> ret = new HashMap<String, SiteSurfaceAccessibilityReport>();
 			final SiteSurfaceAccessibilityReport report = getSiteSurfaceAccesibilityMappedToUniprot(inputParameters);
@@ -92,7 +93,7 @@ public class PDBParser {
 	}
 
 	private Map<String, SiteSurfaceAccessibilityReport> getSiteSurfaceAccesibilityForPDBModel(
-			SurfaceAccebilityInputParameters inputParameters) throws IOException, NotValidPDBException {
+			SurfaceAccebilityInputParameters inputParameters) {
 		// get the proteinSequence in PDB
 		Chain chain = inputParameters.getChain();
 		List<DBRef> dbRefs = new ArrayList<DBRef>();
@@ -148,14 +149,14 @@ public class PDBParser {
 					}
 				}
 			} else {
-				throw new NotValidPDBException("Chain " + chain.getIdentifier() + " not found in PDBParser " + this);
+				log.debug("Chain " + chain.getIdentifier() + " not found in PDBParser " + this);
 			}
 		}
 		return reportsByPDBPositionAndChainAndRemovals;
 	}
 
 	private SiteSurfaceAccessibilityReport getSiteSurfaceAccesibilityMappedToUniprot(
-			SurfaceAccebilityInputParameters inputParameters) throws IOException, NotValidPDBException {
+			SurfaceAccebilityInputParameters inputParameters) {
 		// get the proteinSequence in PDB
 		final Chain chain = inputParameters.getChain();
 		DBRef dbRef = PDBUtil.getDBRef(this, chain.getIdentifier());
@@ -184,9 +185,9 @@ public class PDBParser {
 				final String aa = inputParameters.getAa();
 				Atom atom = getAtom(chain.getIdentifier(), aa, atomType, positionInPDB);
 				if (atom == null) {
-					throw new NotValidPDBException(
-							"Atom is not found with chainID: '" + chain.getIdentifier() + "' in aa: '" + aa
-									+ "' atomType: '" + atomType + "' position in PDB: '" + positionInPDB + "'");
+					log.debug("Atom is not found with chainID: '" + chain.getIdentifier() + "' in aa: '" + aa
+							+ "' atomType: '" + atomType + "' position in PDB: '" + positionInPDB + "'");
+					return null;
 				}
 				Double accesibility = getSurfaceAccesibilityOfAtom(atom, inputParameters.isRemoveOtherChains(),
 						inputParameters.isRemoveOtherMolecules());
@@ -202,16 +203,16 @@ public class PDBParser {
 
 				}
 			} else {
-				throw new NotValidPDBException("Peptide " + uniprotPeptideSeq + " is not found in PDB entry "
-						+ dbRef.getPdbID() + " - " + dbRef.getChainID() + " with protein sequence: " + pdbProteinSeq);
+				log.debug("Peptide " + uniprotPeptideSeq + " is not found in PDB entry " + dbRef.getPdbID() + " - "
+						+ dbRef.getChainID() + " with protein sequence: " + pdbProteinSeq);
 			}
 		} else {
-			throw new NotValidPDBException("Chain " + chain.getIdentifier() + " not found in PDBParser " + this);
+			log.debug("Chain " + chain.getIdentifier() + " not found in PDBParser " + this);
 		}
 		return null;
 	}
 
-	private Boolean getMutation() throws IOException, NotValidPDBException {
+	private Boolean getMutation() {
 		if (mutation == null) {
 			final List<String> lines = getLinesContaining(MUTATION);
 			if (lines != null && !lines.isEmpty()) {
@@ -223,8 +224,7 @@ public class PDBParser {
 		return mutation;
 	}
 
-	private Atom getAtom(String chainID, String aa, AtomType atomType, int positionInPDB)
-			throws IOException, NotValidPDBException {
+	private Atom getAtom(String chainID, String aa, AtomType atomType, int positionInPDB) {
 
 		final List<Atom> atomsByAAPosition = getAtomsByAAPosition(positionInPDB);
 		if (atomsByAAPosition == null) {
@@ -305,13 +305,18 @@ public class PDBParser {
 		return null;
 	}
 
-	private List<Atom> getAtoms() throws IOException, NotValidPDBException {
+	private List<Atom> getAtoms() {
 		if (atomList == null) {
 			atomList = new ArrayList<Atom>();
+
 			if (!getLinesContaining(CA_ATOMS_ONLY).isEmpty()) {
-				throw new NotValidPDBException(CA_ATOMS_ONLY + " entry");
+				return atomList;
 			}
-			final List<String> lines = getLinesStarting(ATOM);
+
+			List<String> lines;
+
+			lines = getLinesStarting(ATOM);
+
 			for (String string : lines) {
 				try {
 					Atom atom = new Atom(string);
@@ -326,11 +331,12 @@ public class PDBParser {
 					log.debug(e);
 				}
 			}
+
 		}
 		return atomList;
 	}
 
-	private List<Atom> getAtomsByAAPosition(int aaPosition) throws IOException, NotValidPDBException {
+	private List<Atom> getAtomsByAAPosition(int aaPosition) {
 		if (atomsByPosition == null) {
 			atomsByPosition = new HashMap<Integer, List<Atom>>();
 			final List<Atom> atoms = getAtoms();
@@ -359,7 +365,7 @@ public class PDBParser {
 
 	}
 
-	public List<DBRef> getDBRefs() throws IOException {
+	public List<DBRef> getDBRefs() {
 		final List<String> lines = getLinesContaining(DBREF);
 		List<DBRef> list = new ArrayList<DBRef>();
 		for (String dbLine : lines) {
@@ -370,20 +376,18 @@ public class PDBParser {
 
 	public String getExperimentalMethod() {
 		if (experimentalMethod == null) {
-			try {
-				List<String> lines = getLinesStarting(EXPDTA);
-				if (!lines.isEmpty()) {
-					String string = lines.get(0);
-					experimentalMethod = string.substring(string.indexOf(EXPDTA) + EXPDTA.length()).trim();
-				}
-			} catch (IOException e) {
 
+			List<String> lines = getLinesStarting(EXPDTA);
+			if (!lines.isEmpty()) {
+				String string = lines.get(0);
+				experimentalMethod = string.substring(string.indexOf(EXPDTA) + EXPDTA.length()).trim();
 			}
+
 		}
 		return experimentalMethod;
 	}
 
-	public String getSequence(DBRef dbRef) throws IOException, NotValidPDBException {
+	public String getSequence(DBRef dbRef) {
 		StringBuilder sb = new StringBuilder();
 		int position = -1;
 		for (Atom atom : getAtoms()) {
@@ -406,18 +410,26 @@ public class PDBParser {
 		return sb.toString();
 	}
 
-	private List<String> getLinesContaining(String containing) throws IOException {
+	private List<String> getLinesContaining(String containing) {
 
 		// When filteredLines is closed, it closes underlying stream as well as
 		// underlying file.
-		return Files.lines(Paths.get(filePath)).filter(s -> s.contains(containing)).collect(Collectors.toList());
+		try {
+			return Files.lines(Paths.get(filePath)).filter(s -> s.contains(containing)).collect(Collectors.toList());
+		} catch (IOException e) {
+			return Collections.emptyList();
+		}
 	}
 
-	private List<String> getLinesStarting(String starting) throws IOException {
+	private List<String> getLinesStarting(String starting) {
 		Path path = Paths.get(filePath);
 		// When filteredLines is closed, it closes underlying stream as well as
 		// underlying file.
-		return Files.lines(path).filter(s -> s.startsWith(starting)).collect(Collectors.toList());
+		try {
+			return Files.lines(path).filter(s -> s.startsWith(starting)).collect(Collectors.toList());
+		} catch (IOException e) {
+			return Collections.emptyList();
+		}
 	}
 
 	/**
@@ -445,15 +457,12 @@ public class PDBParser {
 	}
 
 	public boolean containsUniprotReference(String uniprotAcc) {
-		try {
-			List<DBRef> dbRefs = getDBRefs();
-			for (DBRef dbRef : dbRefs) {
-				if (dbRef.getUniprotID() != null && dbRef.getUniprotID().equals(uniprotAcc)) {
-					return true;
-				}
+
+		List<DBRef> dbRefs = getDBRefs();
+		for (DBRef dbRef : dbRefs) {
+			if (dbRef.getUniprotID() != null && dbRef.getUniprotID().equals(uniprotAcc)) {
+				return true;
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 
 		return false;

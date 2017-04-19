@@ -45,7 +45,7 @@ public class SurfaceAccessibilityCalculator {
 	private boolean removeOtherChains;
 	private boolean removeOtherMolecules;
 	private SurfaceAccessibilityManager manager;
-	private static List<Integer> numPDBStructuresList = new ArrayList<Integer>();
+	private static List<Double> numPDBStructuresList = new ArrayList<Double>();
 
 	public SurfaceAccessibilityCalculator(UniprotProteinLocalRetriever uplr, String aa, AtomType atomType,
 			boolean removeOtherChains, boolean removeOtherMolecules, File parentPDBFolderContainer) {
@@ -340,7 +340,7 @@ public class SurfaceAccessibilityCalculator {
 	 */
 	private List<Chain> getPDBChainListSortedByResolution(Entry entry, int positionInUniprot) {
 		List<Chain> ret = new ArrayList<Chain>();
-		int numPDBStructures = 0;
+		double numPDBStructures = 0;
 		final List<DbReferenceType> dbReferences = entry.getDbReference();
 		if (dbReferences != null) {
 			for (DbReferenceType dbReferenceType : dbReferences) {

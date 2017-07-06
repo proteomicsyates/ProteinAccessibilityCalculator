@@ -12,7 +12,6 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,6 +22,8 @@ import edu.scripps.yates.annotations.uniprot.xml.Entry;
 import edu.scripps.yates.pdb.model.SurfaceProtein;
 import edu.scripps.yates.utilities.progresscounter.ProgressCounter;
 import edu.scripps.yates.utilities.progresscounter.ProgressPrintingType;
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
 
 /**
  * Class that manages the surface accessibility reports in a parsistence layer,
@@ -40,7 +41,7 @@ public class SurfaceAccessibilityManager {
 	private final SurfaceAccessibilityCalculator calculator;
 	private final File surfaceAccessibilityFile;
 	private boolean loaded;
-	private final Map<String, SurfaceAccessibilityProteinReport> reports = new HashMap<String, SurfaceAccessibilityProteinReport>();
+	private final Map<String, SurfaceAccessibilityProteinReport> reports = new THashMap<String, SurfaceAccessibilityProteinReport>();
 	private boolean calculateIfNotPresent;
 
 	public SurfaceAccessibilityManager(SurfaceAccessibilityCalculator calc) {
@@ -53,7 +54,7 @@ public class SurfaceAccessibilityManager {
 
 	public Map<String, SurfaceAccessibilityProteinReport> getProteinAccessibilityReportByProtein(
 			Collection<SurfaceProtein> proteins) {
-		Map<String, SurfaceAccessibilityProteinReport> ret = new HashMap<String, SurfaceAccessibilityProteinReport>();
+		Map<String, SurfaceAccessibilityProteinReport> ret = new THashMap<String, SurfaceAccessibilityProteinReport>();
 		for (SurfaceProtein protein : proteins) {
 			final SurfaceAccessibilityProteinReport proteinAccessibilityReportByProtein = getProteinAccessibilityReportByProtein(
 					protein);
@@ -77,7 +78,7 @@ public class SurfaceAccessibilityManager {
 		if (surfaceAccessibilityProteinReport != null) {
 
 			for (Set<SiteSurfaceAccessibilityReport> reports : surfaceAccessibilityProteinReport
-					.getAccessibilitiesByPositionInUniprotSeq().values()) {
+					.getAccessibilitiesByPositionInUniprotSeq().valueCollection()) {
 				for (SiteSurfaceAccessibilityReport surfaceAccessibilityReport : reports) {
 					addReport(surfaceAccessibilityReport);
 				}
@@ -115,10 +116,12 @@ public class SurfaceAccessibilityManager {
 				out.println(SiteSurfaceAccessibilityReport.getToStringHeaders());
 			}
 			boolean firstOne = false;
-			final Map<Integer, Set<SiteSurfaceAccessibilityReport>> positions = surfaceAccessibilityProteinReport
+			final TIntObjectHashMap<Set<SiteSurfaceAccessibilityReport>> positions = surfaceAccessibilityProteinReport
 					.getAccessibilitiesByPositionInUniprotSeq();
 			List<Integer> sortedPositions = new ArrayList<Integer>();
-			sortedPositions.addAll(positions.keySet());
+			for (int position : positions.keys()) {
+				sortedPositions.add(position);
+			}
 			Collections.sort(sortedPositions);
 			for (Integer position : sortedPositions) {
 				final Set<SiteSurfaceAccessibilityReport> reports = positions.get(position);
@@ -162,10 +165,13 @@ public class SurfaceAccessibilityManager {
 			Collections.sort(keys);
 			for (String key : keys) {
 				final SurfaceAccessibilityProteinReport surfaceAccessibilityProteinReport = reports.get(key);
-				final Map<Integer, Set<SiteSurfaceAccessibilityReport>> positions = surfaceAccessibilityProteinReport
+				final TIntObjectHashMap<Set<SiteSurfaceAccessibilityReport>> positions = surfaceAccessibilityProteinReport
 						.getAccessibilitiesByPositionInUniprotSeq();
 				List<Integer> sortedPositions = new ArrayList<Integer>();
-				sortedPositions.addAll(positions.keySet());
+				for (int position : positions.keys()) {
+					sortedPositions.add(position);
+				}
+
 				Collections.sort(sortedPositions);
 				for (Integer position : sortedPositions) {
 					final Set<SiteSurfaceAccessibilityReport> reports = positions.get(position);
@@ -249,7 +255,7 @@ public class SurfaceAccessibilityManager {
 
 	public Map<String, SurfaceAccessibilityProteinReport> getSurfaceAccesibilityFromProteins(
 			Collection<SurfaceProtein> proteins) {
-		Map<String, SurfaceAccessibilityProteinReport> ret = new HashMap<String, SurfaceAccessibilityProteinReport>();
+		Map<String, SurfaceAccessibilityProteinReport> ret = new THashMap<String, SurfaceAccessibilityProteinReport>();
 
 		ProgressCounter counter = new ProgressCounter(proteins.size(), ProgressPrintingType.PERCENTAGE_STEPS, 1);
 		for (SurfaceProtein protein : proteins) {

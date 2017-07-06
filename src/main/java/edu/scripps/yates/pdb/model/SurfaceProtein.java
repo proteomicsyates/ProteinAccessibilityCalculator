@@ -1,11 +1,12 @@
 package edu.scripps.yates.pdb.model;
 
-import java.util.HashSet;
 import java.util.Set;
+
+import gnu.trove.set.hash.THashSet;
 
 public class SurfaceProtein {
 	private final String acc;
-	private final Set<SurfacePeptide> peptides = new HashSet<SurfacePeptide>();
+	private final Set<SurfacePeptide> peptides = new THashSet<SurfacePeptide>();
 
 	public SurfaceProtein(String acc) {
 		this.acc = acc;

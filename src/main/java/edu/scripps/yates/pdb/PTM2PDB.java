@@ -8,7 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,6 +36,7 @@ import edu.scripps.yates.pdb.util.PropertiesReader;
 import edu.scripps.yates.pdb.util.SurfaceAccesibilityReportWriter;
 import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.files.FileUtils;
+import gnu.trove.map.hash.THashMap;
 
 public class PTM2PDB {
 	private final static Logger log = Logger.getLogger(PTM2PDB.class);
@@ -198,7 +198,7 @@ public class PTM2PDB {
 		String ratioString = null;
 		int row = 0;
 		try {
-			Map<String, SurfaceProtein> ret = new HashMap<String, SurfaceProtein>();
+			Map<String, SurfaceProtein> ret = new THashMap<String, SurfaceProtein>();
 
 			List<String> peptideSequences = FileUtils.readColumnFromTextFile(inputFile, separator,
 					peptideSequenceColumnIndex, skipHeader);

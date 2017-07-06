@@ -2,15 +2,16 @@ package edu.scripps.yates.pdb.read;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
+import gnu.trove.map.hash.THashMap;
+
 public class PDBFileManager {
 	private static final Logger log = Logger.getLogger(PDBFileManager.class);
-	private static Map<File, PDBFileManager> instances = new HashMap<File, PDBFileManager>();
+	private static Map<File, PDBFileManager> instances = new THashMap<File, PDBFileManager>();
 	private final File parentPath;
 
 	private PDBFileManager(File parentPath) {

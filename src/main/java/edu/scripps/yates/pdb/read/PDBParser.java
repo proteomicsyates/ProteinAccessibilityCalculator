@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -24,6 +23,8 @@ import edu.scripps.yates.pdb.surface.SiteSurfaceAccessibilityReport;
 import edu.scripps.yates.pdb.util.JMolCommandsUtil;
 import edu.scripps.yates.pdb.util.SurfaceAccebilityInputParameters;
 import edu.scripps.yates.utilities.strings.StringUtils;
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
 
 public class PDBParser {
 	private final static Logger log = Logger.getLogger(PDBParser.class);
@@ -40,10 +41,10 @@ public class PDBParser {
 	private static JmolViewer viewer;
 	private ArrayList<Atom> atomList;
 	private static boolean initialized = false;
-	private HashMap<Integer, List<Atom>> atomsByPosition;
+	private TIntObjectHashMap<List<Atom>> atomsByPosition;
 	private boolean opened = false;
 	private final String pdbID;
-	private static final Map<String, SiteSurfaceAccessibilityReport> reportsByPDBPositionAndChainAndRemovals = new HashMap<String, SiteSurfaceAccessibilityReport>();
+	private static final Map<String, SiteSurfaceAccessibilityReport> reportsByPDBPositionAndChainAndRemovals = new THashMap<String, SiteSurfaceAccessibilityReport>();
 	private String selectedChainID;
 	private String experimentalMethod;
 	private Boolean mutation;
@@ -81,7 +82,7 @@ public class PDBParser {
 	public Map<String, SiteSurfaceAccessibilityReport> getSiteSurfaceAccesibilityFromParameters(
 			SurfaceAccebilityInputParameters inputParameters) {
 		if (inputParameters.getUniprotACC() != null) {
-			Map<String, SiteSurfaceAccessibilityReport> ret = new HashMap<String, SiteSurfaceAccessibilityReport>();
+			Map<String, SiteSurfaceAccessibilityReport> ret = new THashMap<String, SiteSurfaceAccessibilityReport>();
 			final SiteSurfaceAccessibilityReport report = getSiteSurfaceAccesibilityMappedToUniprot(inputParameters);
 			if (report != null) {
 				ret.put(report.getPositionInPDB() + report.getAtom().getChainID(), report);
@@ -334,7 +335,7 @@ public class PDBParser {
 
 	private List<Atom> getAtomsByAAPosition(int aaPosition) {
 		if (atomsByPosition == null) {
-			atomsByPosition = new HashMap<Integer, List<Atom>>();
+			atomsByPosition = new TIntObjectHashMap<List<Atom>>();
 			final List<Atom> atoms = getAtoms();
 			for (Atom atom : atoms) {
 				final int position = atom.getPositionInPDB();

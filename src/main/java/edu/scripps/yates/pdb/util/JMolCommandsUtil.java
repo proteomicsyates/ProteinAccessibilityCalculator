@@ -1,13 +1,13 @@
 package edu.scripps.yates.pdb.util;
 
 import java.text.DecimalFormat;
-import java.util.HashSet;
 import java.util.Set;
 
 import edu.scripps.yates.pdb.model.Atom;
 import edu.scripps.yates.pdb.surface.JMolScript;
 import edu.scripps.yates.pdb.surface.SiteSurfaceAccessibilityReport;
 import edu.scripps.yates.pdb.surface.SurfaceAccessibilityProteinReport;
+import gnu.trove.set.hash.THashSet;
 
 public class JMolCommandsUtil {
 	private final static DecimalFormat df = new DecimalFormat("0.00");
@@ -74,7 +74,7 @@ public class JMolCommandsUtil {
 	}
 
 	private static Set<String> getChainIDs(Set<SiteSurfaceAccessibilityReport> reports) {
-		Set<String> ret = new HashSet<String>();
+		Set<String> ret = new THashSet<String>();
 		for (SiteSurfaceAccessibilityReport surfaceAccessibilityReport : reports) {
 			ret.add(surfaceAccessibilityReport.getAtom().getChainID());
 		}

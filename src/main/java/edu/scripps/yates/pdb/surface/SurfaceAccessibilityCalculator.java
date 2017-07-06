@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,6 +27,9 @@ import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.maths.Maths;
 import edu.scripps.yates.utilities.strings.StringUtils;
 import edu.scripps.yates.utilities.util.Pair;
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
+import gnu.trove.set.hash.TIntHashSet;
 
 public class SurfaceAccessibilityCalculator {
 	private static final int MIN_LENTH = 6;
@@ -88,7 +89,7 @@ public class SurfaceAccessibilityCalculator {
 
 	protected Map<String, SurfaceAccessibilityProteinReport> getSurfaceAccesibilityFromProteins(
 			Collection<SurfaceProtein> proteins) {
-		Set<String> uniprotAccs = new HashSet<String>();
+		Set<String> uniprotAccs = new THashSet<String>();
 		for (SurfaceProtein protein : proteins) {
 			final Pair<String, String> acc = FastaParser.getACC(protein.getAcc());
 			if (acc != null && acc.getSecondElement().equals("UNIPROT")) {
@@ -98,7 +99,7 @@ public class SurfaceAccessibilityCalculator {
 				uniprotAccs.add(acc.getFirstelement());
 			}
 		}
-		Map<String, SurfaceAccessibilityProteinReport> ret = new HashMap<String, SurfaceAccessibilityProteinReport>();
+		Map<String, SurfaceAccessibilityProteinReport> ret = new THashMap<String, SurfaceAccessibilityProteinReport>();
 		final Map<String, Entry> annotatedProteins = uplr.getAnnotatedProteins(getUniprotVersion(), uniprotAccs);
 		for (SurfaceProtein protein : proteins) {
 			if (annotatedProteins.containsKey(protein.getAcc())) {
@@ -179,8 +180,8 @@ public class SurfaceAccessibilityCalculator {
 		final Set<SurfacePeptide> uniprotPeptides = protein.getPeptides();// getPeptides(uniprotProteinSeq);
 		final String acc = protein.getAcc();
 		SurfaceAccessibilityProteinReport proteinReport = new SurfaceAccessibilityProteinReport(acc, uniprotProteinSeq);
-		Set<Integer> positionsInUniprotProteinProcessed = new HashSet<Integer>();
-		Map<String, List<SurfaceAccebilityInputParameters>> parametersByPDBID = new HashMap<String, List<SurfaceAccebilityInputParameters>>();
+		TIntHashSet positionsInUniprotProteinProcessed = new TIntHashSet();
+		Map<String, List<SurfaceAccebilityInputParameters>> parametersByPDBID = new THashMap<String, List<SurfaceAccebilityInputParameters>>();
 		int numCalculationsToDo = 0;
 		for (SurfacePeptide uniprotPeptide : uniprotPeptides) {
 			String uniprotPeptideSequence = uniprotPeptide.getSequence();
@@ -414,7 +415,7 @@ public class SurfaceAccessibilityCalculator {
 
 	private Set<Chain> getChainsFromChainString(String chainsString, DbReferenceType dbReferenceType,
 			Float resolution) {
-		Set<Chain> ret = new HashSet<Chain>();
+		Set<Chain> ret = new THashSet<Chain>();
 		if (chainsString.contains(",")) {
 			final String[] split = chainsString.split(",");
 			for (String individualChaingString : split) {
@@ -428,7 +429,7 @@ public class SurfaceAccessibilityCalculator {
 
 	private Set<Chain> getChainsFromIndividualChainString(String individualChaingString,
 			DbReferenceType dbReferenceType, Float resolution) {
-		Set<Chain> ret = new HashSet<Chain>();
+		Set<Chain> ret = new THashSet<Chain>();
 		if (individualChaingString.contains("=")) {
 			final String[] split = individualChaingString.split("=");
 			String chainIdString = split[0];

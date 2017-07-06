@@ -2,20 +2,21 @@ package edu.scripps.yates.pdb.read;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
+
 public class PDBParserManager {
 	// static variables
-	private final static Map<String, PDBParser> staticParsersMap = new HashMap<String, PDBParser>();
-	private static final Set<String> pdbsNotRetrieved = new HashSet<String>();;
+	private final static Map<String, PDBParser> staticParsersMap = new THashMap<String, PDBParser>();
+	private static final Set<String> pdbsNotRetrieved = new THashSet<String>();;
 
 	// non static variables
 	private final PDBFileManager pdbFileManager;
 	private boolean keepManagersInMemory = false;
-	private final Map<String, PDBParser> parsersMap = new HashMap<String, PDBParser>();
+	private final Map<String, PDBParser> parsersMap = new THashMap<String, PDBParser>();
 
 	public PDBParserManager(File parentFolder) {
 		pdbFileManager = PDBFileManager.getInstance(parentFolder);

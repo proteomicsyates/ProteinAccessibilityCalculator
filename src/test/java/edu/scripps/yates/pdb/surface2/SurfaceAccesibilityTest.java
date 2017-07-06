@@ -10,8 +10,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,6 +43,9 @@ import edu.scripps.yates.utilities.proteomicsmodel.Project;
 import edu.scripps.yates.utilities.proteomicsmodel.Protein;
 import edu.scripps.yates.utilities.proteomicsmodel.Ratio;
 import edu.scripps.yates.utilities.strings.StringUtils;
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.set.hash.THashSet;
 import psidev.psi.tools.ontology_manager.interfaces.OntologyTermI;
 
 public class SurfaceAccesibilityTest {
@@ -66,10 +67,12 @@ public class SurfaceAccesibilityTest {
 				removeOtherMolecules, pdbFolder);
 		final SurfaceAccessibilityProteinReport surfaceAccesibilityProteinReport = calc
 				.getSurfaceAccesibilityFromProtein(protein);
-		final Map<Integer, Set<SiteSurfaceAccessibilityReport>> accesibilitiesByPositionInUniprotSeq = surfaceAccesibilityProteinReport
+		final TIntObjectHashMap<Set<SiteSurfaceAccessibilityReport>> accesibilitiesByPositionInUniprotSeq = surfaceAccesibilityProteinReport
 				.getAccessibilitiesByPositionInUniprotSeq();
 		List<Integer> positionList = new ArrayList<Integer>();
-		positionList.addAll(accesibilitiesByPositionInUniprotSeq.keySet());
+		for (int position : accesibilitiesByPositionInUniprotSeq.keys()) {
+			positionList.add(position);
+		}
 		Collections.sort(positionList);
 		for (Integer position : positionList) {
 			final Set<SiteSurfaceAccessibilityReport> surfaceAccesibilityReports = accesibilitiesByPositionInUniprotSeq
@@ -99,10 +102,13 @@ public class SurfaceAccesibilityTest {
 		final SurfaceAccessibilityProteinReport surfaceAccesibilityProteinReport = manager
 				.getProteinAccessibilityReportByProtein(protein);
 
-		final Map<Integer, Set<SiteSurfaceAccessibilityReport>> accesibilitiesByPositionInUniprotSeq = surfaceAccesibilityProteinReport
+		final TIntObjectHashMap<Set<SiteSurfaceAccessibilityReport>> accesibilitiesByPositionInUniprotSeq = surfaceAccesibilityProteinReport
 				.getAccessibilitiesByPositionInUniprotSeq();
 		List<Integer> positionList = new ArrayList<Integer>();
-		positionList.addAll(accesibilitiesByPositionInUniprotSeq.keySet());
+		for (int position : accesibilitiesByPositionInUniprotSeq.keys()) {
+			positionList.add(position);
+		}
+
 		Collections.sort(positionList);
 		for (Integer position : positionList) {
 			final Set<SiteSurfaceAccessibilityReport> surfaceAccesibilityReports = accesibilitiesByPositionInUniprotSeq
@@ -150,12 +156,12 @@ public class SurfaceAccesibilityTest {
 			manager.setCalculateIfNotPresent(true);
 			final Map<String, SurfaceAccessibilityProteinReport> surfaceAccesibilityFromProteins = manager
 					.getSurfaceAccesibilityFromProteins(proteinAccs);
-			Set<String> psmIds = new HashSet<String>();
-			Set<String> peptideSequences = new HashSet<String>();
-			Set<String> peptideSequencesValid = new HashSet<String>();
-			Set<String> uniquePositionsValid = new HashSet<String>();
-			Set<String> proteinsWithNoPDBInformation = new HashSet<String>();
-			Set<String> totalProteins = new HashSet<String>();
+			Set<String> psmIds = new THashSet<String>();
+			Set<String> peptideSequences = new THashSet<String>();
+			Set<String> peptideSequencesValid = new THashSet<String>();
+			Set<String> uniquePositionsValid = new THashSet<String>();
+			Set<String> proteinsWithNoPDBInformation = new THashSet<String>();
+			Set<String> totalProteins = new THashSet<String>();
 			final Set<Condition> conditions = project.getConditions();
 			for (Condition condition : conditions) {
 				final Set<PSM> psMs = condition.getPSMs();
@@ -261,12 +267,12 @@ public class SurfaceAccesibilityTest {
 			manager.setCalculateIfNotPresent(true);
 			final Map<String, SurfaceAccessibilityProteinReport> surfaceAccesibilityFromProteins = manager
 					.getSurfaceAccesibilityFromProteins(dnaBindingProteins);
-			Set<String> psmIds = new HashSet<String>();
-			Set<String> peptideSequences = new HashSet<String>();
-			Set<String> peptideSequencesValid = new HashSet<String>();
-			Set<String> uniquePositionsValid = new HashSet<String>();
-			Set<String> proteinsWithNoPDBInformation = new HashSet<String>();
-			Set<String> totalProteins = new HashSet<String>();
+			Set<String> psmIds = new THashSet<String>();
+			Set<String> peptideSequences = new THashSet<String>();
+			Set<String> peptideSequencesValid = new THashSet<String>();
+			Set<String> uniquePositionsValid = new THashSet<String>();
+			Set<String> proteinsWithNoPDBInformation = new THashSet<String>();
+			Set<String> totalProteins = new THashSet<String>();
 			final Set<Condition> conditions = project.getConditions();
 			for (Condition condition : conditions) {
 				final Set<PSM> psMs = condition.getPSMs();
@@ -356,17 +362,17 @@ public class SurfaceAccesibilityTest {
 		File experimentalDataFile = new File(
 				"z:\\share\\Salva\\data\\PINT projects\\molecular painting\\experimental_proteins.csv");
 		try {
-			Set<String> psmIds = new HashSet<String>();
-			Set<String> peptideSequences = new HashSet<String>();
-			Set<String> peptideSequencesValid = new HashSet<String>();
-			Set<String> uniquePositionsValid = new HashSet<String>();
-			Set<String> proteinsWithNoPDBInformation = new HashSet<String>();
-			Set<String> totalProteins = new HashSet<String>();
-			Set<SurfacePeptide> surfacePeptides = new HashSet<SurfacePeptide>();
+			Set<String> psmIds = new THashSet<String>();
+			Set<String> peptideSequences = new THashSet<String>();
+			Set<String> peptideSequencesValid = new THashSet<String>();
+			Set<String> uniquePositionsValid = new THashSet<String>();
+			Set<String> proteinsWithNoPDBInformation = new THashSet<String>();
+			Set<String> totalProteins = new THashSet<String>();
+			Set<SurfacePeptide> surfacePeptides = new THashSet<SurfacePeptide>();
 			List<String> accs = FileUtils.readColumnFromTextFile(experimentalDataFile, ",", 0, true);
 			List<String> seqs = FileUtils.readColumnFromTextFile(experimentalDataFile, ",", 1, true);
 			List<String> ratios = FileUtils.readColumnFromTextFile(experimentalDataFile, ",", 2, true);
-			Map<String, SurfaceProtein> surfaceProteinMap = new HashMap<String, SurfaceProtein>();
+			Map<String, SurfaceProtein> surfaceProteinMap = new THashMap<String, SurfaceProtein>();
 			Map<String, Entry> annotatedProteins = uplr.getAnnotatedProteins(null, accs);
 
 			for (int i = 0; i < accs.size(); i++) {
@@ -484,7 +490,7 @@ public class SurfaceAccesibilityTest {
 
 	private void run(Collection<SurfacePeptide> surfacePeptides, Map<String, SurfaceProtein> surfaceProteinMap,
 			SurfaceAccessibilityCalculator calc, FileWriter fw, Set<String> peptideSequences, String aa)
-					throws IOException {
+			throws IOException {
 		printHeader(fw, null);
 		SurfaceAccessibilityManager manager = new SurfaceAccessibilityManager(calc);
 		manager.setCalculateIfNotPresent(true);
@@ -524,16 +530,15 @@ public class SurfaceAccesibilityTest {
 	private Set<SurfaceProtein> filterDNABindingProteins(Set<SurfaceProtein> proteinAccs,
 			UniprotProteinLocalRetriever uplr) {
 
-		Set<SurfaceProtein> ret = new HashSet<SurfaceProtein>();
+		Set<SurfaceProtein> ret = new THashSet<SurfaceProtein>();
 		File dnaBindingProteins = new File(
 				"z:\\share\\Salva\\data\\PINT projects\\molecular painting\\DNABindingProteins.csv");
 		try {
 			FileWriter fw = null;
 
-			Set<String> accs = new HashSet<String>();
+			Set<String> accs = new THashSet<String>();
 			if (dnaBindingProteins.exists()) {
-				accs.addAll(
-						(Set<String>) Files.lines(Paths.get(dnaBindingProteins.toURI())).collect(Collectors.toSet()));
+				accs.addAll(Files.lines(Paths.get(dnaBindingProteins.toURI())).collect(Collectors.toSet()));
 
 			}
 
@@ -618,12 +623,12 @@ public class SurfaceAccesibilityTest {
 			manager.setCalculateIfNotPresent(false);
 			final Map<String, SurfaceAccessibilityProteinReport> surfaceAccesibilityFromProteins = manager
 					.getSurfaceAccesibilityFromProteins(proteinAccs);
-			Set<String> psmIds = new HashSet<String>();
-			Set<String> peptideSequences = new HashSet<String>();
-			Set<String> peptideSequencesValid = new HashSet<String>();
-			Set<String> uniquePositionsValid = new HashSet<String>();
-			Set<String> proteinsWithNoPDBInformation = new HashSet<String>();
-			Set<String> totalProteins = new HashSet<String>();
+			Set<String> psmIds = new THashSet<String>();
+			Set<String> peptideSequences = new THashSet<String>();
+			Set<String> peptideSequencesValid = new THashSet<String>();
+			Set<String> uniquePositionsValid = new THashSet<String>();
+			Set<String> proteinsWithNoPDBInformation = new THashSet<String>();
+			Set<String> totalProteins = new THashSet<String>();
 			final Set<Condition> conditions = project.getConditions();
 			for (Condition condition : conditions) {
 				if (condition.getName().startsWith("HS")) {
@@ -717,7 +722,7 @@ public class SurfaceAccesibilityTest {
 	}
 
 	private Set<String> getProteinAccessions(Set<Protein> proteins) {
-		Set<String> proteinAccessionsFromAccessions = new HashSet<String>();
+		Set<String> proteinAccessionsFromAccessions = new THashSet<String>();
 
 		for (Protein protein : proteins) {
 			proteinAccessionsFromAccessions.add(protein.getAccession());
@@ -726,7 +731,7 @@ public class SurfaceAccesibilityTest {
 	}
 
 	private Set<String> getSurfaceProteinAccessions(Set<SurfaceProtein> proteins) {
-		Set<String> proteinAccessionsFromAccessions = new HashSet<String>();
+		Set<String> proteinAccessionsFromAccessions = new THashSet<String>();
 
 		for (SurfaceProtein protein : proteins) {
 			proteinAccessionsFromAccessions.add(protein.getAcc());
@@ -735,9 +740,9 @@ public class SurfaceAccesibilityTest {
 	}
 
 	private Set<SurfaceProtein> getProteinAccsFromProject(Project project) {
-		Set<SurfaceProtein> proteinAccessionsFromProject = new HashSet<SurfaceProtein>();
+		Set<SurfaceProtein> proteinAccessionsFromProject = new THashSet<SurfaceProtein>();
 		final Set<Condition> conditions = project.getConditions();
-		Map<String, SurfacePeptide> surfacePeptideMap = new HashMap<String, SurfacePeptide>();
+		Map<String, SurfacePeptide> surfacePeptideMap = new THashMap<String, SurfacePeptide>();
 		for (Condition condition : conditions) {
 			final Set<Protein> proteins = condition.getProteins();
 			for (Protein protein : proteins) {
@@ -761,7 +766,7 @@ public class SurfaceAccesibilityTest {
 	}
 
 	private List<String> getRatioScoreNamesFromProject(Project project) {
-		Set<String> ret = new HashSet<String>();
+		Set<String> ret = new THashSet<String>();
 		final Set<Condition> conditions = project.getConditions();
 		for (Condition condition : conditions) {
 			final Set<PSM> psms = condition.getPSMs();

@@ -3,10 +3,12 @@ package edu.scripps.yates.pdb.util;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import edu.scripps.yates.pdb.model.SurfacePeptide;
+import edu.scripps.yates.pdb.surface.ErrorFunction;
 import edu.scripps.yates.pdb.surface.SiteSurfaceAccessibilityReport;
 import edu.scripps.yates.pdb.surface.SurfaceAccessibilityProteinReport;
 import edu.scripps.yates.utilities.proteomicsmodel.Ratio;
@@ -29,17 +31,40 @@ public class SurfaceAccesibilityReportWriter {
 	 */
 	public static void printReportForPsm(FileWriter fw, Ratio ratio, String psmID, String peptideSequence,
 			SurfaceAccessibilityProteinReport surfaceAccesibilityProteinReport, String aa,
-			boolean printOnlyTheMostAccessibleSite) throws IOException {
+			boolean printOnlyTheMostAccessibleSite, boolean printOnlyTheBestPerPSM) throws IOException {
 		final String uniprotProteinSequence = surfaceAccesibilityProteinReport.getUniprotProteinSequence();
 		final int positionOfPeptideInProtein = uniprotProteinSequence.indexOf(peptideSequence);
 
 		List<Integer> positionsOfAAInPeptide = StringUtils.allPositionsOf(peptideSequence, aa);
+		// in order to not repeat sites, coming from different peptides
+		Set<Integer> positionsInProtein = new HashSet<Integer>();
+
 		for (Integer positionOfAAInPeptide : positionsOfAAInPeptide) {
 			int positionOfAAInProtein = positionOfAAInPeptide + positionOfPeptideInProtein;
+			if (positionsInProtein.contains(positionOfAAInProtein)) {
+				continue;
+			}
+			positionsInProtein.add(positionOfAAInProtein);
 			final Set<SiteSurfaceAccessibilityReport> surfaceAccesibilityReports = surfaceAccesibilityProteinReport
 					.getSurfaceAccessibilityReportsBySite(positionOfAAInProtein);
 			if (surfaceAccesibilityReports != null) {
-				if (!printOnlyTheMostAccessibleSite) {
+				if (printOnlyTheBestPerPSM) {
+					SiteSurfaceAccessibilityReport bestAccessibleSite = null;
+					double maxError = Double.MAX_VALUE;
+
+					for (SiteSurfaceAccessibilityReport surfaceAccessibilityReport : surfaceAccesibilityReports) {
+						double errorValue = ErrorFunction.getErrorValue(ratio.getValue(),
+								surfaceAccessibilityReport.getAccesibility());
+
+						if (errorValue < maxError) {
+							maxError = errorValue;
+							bestAccessibleSite = surfaceAccessibilityReport;
+						}
+
+					}
+					printReportForSite(fw, surfaceAccesibilityProteinReport.getUniprotACC(), ratio, psmID,
+							peptideSequence, positionOfAAInPeptide, aa, bestAccessibleSite);
+				} else if (!printOnlyTheMostAccessibleSite) {
 					for (SiteSurfaceAccessibilityReport surfaceAccessibilityReport : surfaceAccesibilityReports) {
 						printReportForSite(fw, surfaceAccesibilityProteinReport.getUniprotACC(), ratio, psmID,
 								peptideSequence, positionOfAAInPeptide, aa, surfaceAccessibilityReport);

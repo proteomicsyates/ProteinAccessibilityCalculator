@@ -40,19 +40,21 @@ public class SurfaceAccessibilityCalculator {
 	private final PDBParserManager pdbParserManager;
 	private boolean createImages = false;
 	private String uniprotVersion = null;
-	private boolean removeOtherChains;
-	private boolean removeOtherMolecules;
+	private final boolean removeOtherChains;
+	private final boolean removeOtherMolecules;
 	private SurfaceAccessibilityManager manager;
+	private final boolean testAllPositilities;
 	private static List<Double> numPDBStructuresList = new ArrayList<Double>();
 
 	public SurfaceAccessibilityCalculator(UniprotProteinLocalRetriever uplr, String aa, AtomType atomType,
-			boolean removeOtherChains, boolean removeOtherMolecules, File parentPDBFolderContainer) {
+			boolean removeOtherChains, boolean removeOtherMolecules, boolean testAllPositilities,
+			File parentPDBFolderContainer) {
 		this.uplr = uplr;
 		this.aa = aa;
 		this.atomType = atomType;
 		this.removeOtherChains = removeOtherChains;
 		this.removeOtherMolecules = removeOtherMolecules;
-
+		this.testAllPositilities = testAllPositilities;
 		pdbParserManager = new PDBParserManager(parentPDBFolderContainer);
 	}
 
@@ -113,7 +115,29 @@ public class SurfaceAccessibilityCalculator {
 	}
 
 	public SurfaceAccessibilityProteinReport getSurfaceAccesibilityFromPDBModel(String pdbID, String chainID) {
+		List<SurfaceAccessibilityProteinReport> list = new ArrayList<SurfaceAccessibilityProteinReport>();
+		if (this.testAllPositilities) {
+			list.add(getSurfaceAccesibilityFromPDBModel(pdbID, chainID, true, true));
+			list.add(getSurfaceAccesibilityFromPDBModel(pdbID, chainID, false, true));
+			list.add(getSurfaceAccesibilityFromPDBModel(pdbID, chainID, false, false));
+		} else {
+			list.add(getSurfaceAccesibilityFromPDBModel(pdbID, chainID, true, true));
+		}
+		if (list.isEmpty()) {
+			return null;
+		}
+		// merge to return just one
+		SurfaceAccessibilityProteinReport ret = list.get(0);
+		for (int i = 1; i < list.size(); i++) {
+			for (SiteSurfaceAccessibilityReport report : list.get(i).getReports()) {
+				ret.addSurfaceAccesibilityReport(report);
+			}
+		}
+		return ret;
+	}
 
+	private SurfaceAccessibilityProteinReport getSurfaceAccesibilityFromPDBModel(String pdbID, String chainID,
+			boolean removeOtherChains, boolean removeOtherMolecules) {
 		pdbParserManager.clearParsers();
 
 		SurfaceAccessibilityProteinReport proteinReport = new SurfaceAccessibilityProteinReport(pdbID, null);
@@ -121,7 +145,6 @@ public class SurfaceAccessibilityCalculator {
 		PDBParser parser = pdbParserManager.getPDBParserByPDBID(pdbID);
 		if (parser != null) {
 			if (chainID != null) {
-
 				inputParameters = new SurfaceAccebilityInputParameters(aa, atomType, pdbID, chainID, removeOtherChains,
 						removeOtherMolecules);
 			} else {
@@ -167,6 +190,50 @@ public class SurfaceAccessibilityCalculator {
 	}
 
 	private SurfaceAccessibilityProteinReport getSurfaceAccesibilityFromProtein(SurfaceProtein protein, Entry entry) {
+		List<SurfaceAccessibilityProteinReport> list = new ArrayList<SurfaceAccessibilityProteinReport>();
+
+		if (this.testAllPositilities) {
+			SurfaceAccessibilityProteinReport surfaceAccesibilityFromProtein = getSurfaceAccesibilityFromProtein(
+					protein, entry, true, true);
+			if (surfaceAccesibilityFromProtein != null) {
+				list.add(surfaceAccesibilityFromProtein);
+			}
+			SurfaceAccessibilityProteinReport surfaceAccesibilityFromProtein2 = getSurfaceAccesibilityFromProtein(
+					protein, entry, false, true);
+			if (surfaceAccesibilityFromProtein2 != null) {
+				list.add(surfaceAccesibilityFromProtein2);
+			}
+			SurfaceAccessibilityProteinReport surfaceAccesibilityFromProtein3 = getSurfaceAccesibilityFromProtein(
+					protein, entry, false, false);
+			if (surfaceAccesibilityFromProtein3 != null) {
+				list.add(surfaceAccesibilityFromProtein3);
+			}
+		} else {
+			SurfaceAccessibilityProteinReport surfaceAccesibilityFromProtein = getSurfaceAccesibilityFromProtein(
+					protein, entry, this.removeOtherChains, this.removeOtherMolecules);
+			if (surfaceAccesibilityFromProtein != null) {
+				list.add(surfaceAccesibilityFromProtein);
+			}
+		}
+		if (list.isEmpty()) {
+			return null;
+		}
+		// merge to return just one
+		SurfaceAccessibilityProteinReport ret = list.get(0);
+		for (int i = 1; i < list.size(); i++) {
+			List<SiteSurfaceAccessibilityReport> reports = list.get(i).getReports();
+			if (reports == null) {
+				continue;
+			}
+			for (SiteSurfaceAccessibilityReport report : reports) {
+				ret.addSurfaceAccesibilityReport(report);
+			}
+		}
+		return ret;
+	}
+
+	private SurfaceAccessibilityProteinReport getSurfaceAccesibilityFromProtein(SurfaceProtein protein, Entry entry,
+			boolean removeOtherChains, boolean removeOtherMolecules) {
 		final String uniprotProteinSeq = getUniprotProteinSequence(entry);
 		if (uniprotProteinSeq == null) {
 			return null;

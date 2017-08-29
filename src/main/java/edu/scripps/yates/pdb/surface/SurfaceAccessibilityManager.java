@@ -5,10 +5,12 @@ import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.nio.channels.FileLock;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -102,15 +104,17 @@ public class SurfaceAccessibilityManager {
 
 	private void appendReportToFile(SurfaceAccessibilityProteinReport surfaceAccessibilityProteinReport) {
 		PrintWriter out = null;
+		FileLock fileLocker = null;
 		try {
 			boolean writeHeader = false;
 			if (!surfaceAccessibilityFile.exists() || surfaceAccessibilityFile.length() == 0l) {
 				// write the header = true
 				writeHeader = true;
 			}
-			FileWriter fw = new FileWriter(surfaceAccessibilityFile, true);
-			BufferedWriter bw = new BufferedWriter(fw);
-			out = new PrintWriter(bw);
+
+			FileOutputStream fw = new FileOutputStream(surfaceAccessibilityFile, true);
+			fileLocker = fw.getChannel().lock();
+			out = new PrintWriter(fw);
 			if (writeHeader) {
 				out.println(SiteSurfaceAccessibilityReport.getToStringHeaders());
 			}
@@ -139,7 +143,17 @@ public class SurfaceAccessibilityManager {
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
-			out.close();
+			if (out != null) {
+				out.close();
+			}
+			if (fileLocker != null) {
+				try {
+					fileLocker.release();
+				} catch (IOException e) {
+					//
+				}
+			}
+
 		}
 
 	}

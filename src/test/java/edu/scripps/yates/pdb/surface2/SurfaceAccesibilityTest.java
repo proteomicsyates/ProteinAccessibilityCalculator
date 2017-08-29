@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 
 import org.junit.Test;
 
-import edu.scripps.yates.annotations.go.GORetriever;
 import edu.scripps.yates.annotations.uniprot.UniprotProteinLocalRetriever;
 import edu.scripps.yates.annotations.uniprot.UniprotProteinRetrievalSettings;
 import edu.scripps.yates.annotations.uniprot.xml.Entry;
@@ -45,7 +44,6 @@ import edu.scripps.yates.utilities.proteomicsmodel.Project;
 import edu.scripps.yates.utilities.proteomicsmodel.Protein;
 import edu.scripps.yates.utilities.proteomicsmodel.Ratio;
 import edu.scripps.yates.utilities.strings.StringUtils;
-import psidev.psi.tools.ontology_manager.interfaces.OntologyTermI;
 
 public class SurfaceAccesibilityTest {
 
@@ -316,129 +314,6 @@ public class SurfaceAccesibilityTest {
 					}
 				}
 			}
-			fw.write("\n\n\n\n\n");
-			fw.write(psmIds.size() + " PSMs in total\n");
-			fw.write(validPSMs + " PSMs valid (containing quantitative information)\n");
-			fw.write(psmsNoAA + " PSMs discarded for not containing " + aa + "\n");
-			fw.write(discardedContainingMoreThanOneK + " PSMs discarded having more than one " + aa + "\n");
-			fw.write(psmsWithAANoRatios + " PSMs with no experimental quantitative information\n");
-			fw.write(peptideSequences.size() + " peptides sequences in total\n");
-			fw.write(peptideSequencesValid.size()
-					+ " peptides sequences with some site with experimental and theoretical data\n");
-			fw.write(uniquePositionsValid.size() + " different sites with experimental and theoretical data\n");
-			fw.write(totalProteins.size() + " total different proteins\n");
-			fw.write(proteinsWithNoPDBInformation.size() + " proteins with no PDB information\n");
-			fw.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-			fail();
-		}
-	}
-
-	@Test
-	public void surfaceAccesibilityFromRemoteFiles_DNABinding_FromTable() {
-		String GO = "GO:0003677";
-		boolean filterByAnnotation = false;
-		// Double minRatio = -Double.MAX_VALUE;
-		Double minRatio = 0.0;
-		// this gets the experimental data from a table
-		OntologyTermI goTerm = new GORetriever(new File("z:\\share\\Salva\\data\\go")).getGOTermByID(GO);
-		String goName = "";
-		if (goTerm != null) {
-			goName = goTerm.getPreferredName();
-		}
-		File outputFile = new File("z:\\share\\Salva\\data\\PINT projects\\molecular painting\\surface_" + goName
-				+ "_ratio_gte=" + minRatio + ".csv");
-		final File uniprotReleasesFolder = new File("z:\\share\\Salva\\data\\uniprotKB");
-		UniprotProteinLocalRetriever uplr = new UniprotProteinLocalRetriever(uniprotReleasesFolder, true);
-		UniprotProteinRetrievalSettings.getInstance(uniprotReleasesFolder, true);
-		File pdbFolder = new File("z:\\share\\Salva\\data\\pdb");
-		File experimentalDataFile = new File(
-				"z:\\share\\Salva\\data\\PINT projects\\molecular painting\\experimental_proteins.csv");
-		try {
-			Set<String> psmIds = new HashSet<String>();
-			Set<String> peptideSequences = new HashSet<String>();
-			Set<String> peptideSequencesValid = new HashSet<String>();
-			Set<String> uniquePositionsValid = new HashSet<String>();
-			Set<String> proteinsWithNoPDBInformation = new HashSet<String>();
-			Set<String> totalProteins = new HashSet<String>();
-			Set<SurfacePeptide> surfacePeptides = new HashSet<SurfacePeptide>();
-			List<String> accs = FileUtils.readColumnFromTextFile(experimentalDataFile, ",", 0, true);
-			List<String> seqs = FileUtils.readColumnFromTextFile(experimentalDataFile, ",", 1, true);
-			List<String> ratios = FileUtils.readColumnFromTextFile(experimentalDataFile, ",", 2, true);
-			Map<String, SurfaceProtein> surfaceProteinMap = new HashMap<String, SurfaceProtein>();
-			Map<String, Entry> annotatedProteins = uplr.getAnnotatedProteins(null, accs);
-
-			for (int i = 0; i < accs.size(); i++) {
-
-				Double ratio = Double.valueOf(ratios.get(i));
-				if (ratio >= minRatio) {
-					String acc = accs.get(i);
-					if (acc.equals("P09211")) {
-						System.out.println(acc);
-					}
-					Entry entry = annotatedProteins.get(acc);
-					if (entry != null) {
-						if (acc.equals("P09211")) {
-							System.out.println(acc);
-						}
-						List<String> query = JAXBXPathQuery.query(entry, "dbReference$id=" + GO, "$id");
-						boolean containsAnnotation = !query.isEmpty();
-						if (filterByAnnotation && !containsAnnotation) {
-							continue;
-						}
-					}
-					totalProteins.add(acc);
-					SurfacePeptide peptide = new SurfacePeptide(seqs.get(i), ratio);
-					surfacePeptides.add(peptide);
-					if (surfaceProteinMap.containsKey(acc)) {
-						surfaceProteinMap.get(acc).addPeptide(peptide);
-					} else {
-						SurfaceProtein protein = new SurfaceProtein(acc);
-						protein.addPeptide(peptide);
-						surfaceProteinMap.put(acc, protein);
-					}
-				}
-
-			}
-			System.out.println(surfaceProteinMap.size() + " proteins with experimental data");
-			String aa = "K";
-			AtomType atomType = AtomType.NZ;
-
-			boolean printOnlyTheMostAccessibleSite = false;
-
-			int psmsNoAA = 0;
-			int psmsWithAANoRatios = 0;
-			int discardedContainingMoreThanOneK = 0;
-			int validPSMs = 0;
-
-			FileWriter fw = null;
-
-			fw = new FileWriter(outputFile);
-			fw.write("\n\nremoveOtherChains=true, removeOtherMolecules=true\n\n");
-			removeOtherChains = true;
-			removeOtherMolecules = true;
-			SurfaceAccessibilityCalculator calc = new SurfaceAccessibilityCalculator(uplr, aa, atomType,
-					removeOtherChains, removeOtherMolecules, pdbFolder);
-			run(surfacePeptides, surfaceProteinMap, calc, fw, peptideSequences, aa);
-			System.out.println(calc.getStatistics());
-			calc.clearStatistics();
-			fw.write("\n\nremoveOtherChains=false, removeOtherMolecules=true\n\n");
-			removeOtherChains = false;
-			removeOtherMolecules = true;
-			calc = new SurfaceAccessibilityCalculator(uplr, aa, atomType, removeOtherChains, removeOtherMolecules,
-					pdbFolder);
-			run(surfacePeptides, surfaceProteinMap, calc, fw, peptideSequences, aa);
-			System.out.println(calc.getStatistics());
-			calc.clearStatistics();
-			fw.write("\n\nremoveOtherChains=false, removeOtherMolecules=false\n\n");
-			removeOtherChains = false;
-			removeOtherMolecules = false;
-			calc = new SurfaceAccessibilityCalculator(uplr, aa, atomType, removeOtherChains, removeOtherMolecules,
-					pdbFolder);
-			run(surfacePeptides, surfaceProteinMap, calc, fw, peptideSequences, aa);
-			System.out.println(calc.getStatistics());
-			calc.clearStatistics();
 			fw.write("\n\n\n\n\n");
 			fw.write(psmIds.size() + " PSMs in total\n");
 			fw.write(validPSMs + " PSMs valid (containing quantitative information)\n");

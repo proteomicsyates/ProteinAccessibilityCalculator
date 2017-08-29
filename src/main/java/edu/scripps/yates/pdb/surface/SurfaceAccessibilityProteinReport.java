@@ -2,8 +2,6 @@ package edu.scripps.yates.pdb.surface;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,6 +13,10 @@ import javax.json.JsonObjectBuilder;
 
 import org.apache.log4j.Logger;
 
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.set.hash.THashSet;
+
 /**
  * Stores all SurfaceAccesibilityReport from a protein, stored by position in
  * its sequence
@@ -22,7 +24,7 @@ import org.apache.log4j.Logger;
 public class SurfaceAccessibilityProteinReport {
 	private final String uniprotACC;
 	private final String uniprotProteinSequence;
-	private final Map<Integer, Set<SiteSurfaceAccessibilityReport>> accessibilitiesByPositionInUniprotSeq = new HashMap<Integer, Set<SiteSurfaceAccessibilityReport>>();
+	private final TIntObjectHashMap<Set<SiteSurfaceAccessibilityReport>> accessibilitiesByPositionInUniprotSeq = new TIntObjectHashMap<Set<SiteSurfaceAccessibilityReport>>();
 	private final List<SiteSurfaceAccessibilityReport> reports = new ArrayList<SiteSurfaceAccessibilityReport>();
 
 	private static final Logger log = Logger.getLogger(SurfaceAccessibilityProteinReport.class);
@@ -55,7 +57,7 @@ public class SurfaceAccessibilityProteinReport {
 			if (accessibilitiesByPositionInUniprotSeq.containsKey(positionInUniprotSeq)) {
 				accessibilitiesByPositionInUniprotSeq.get(positionInUniprotSeq).add(report);
 			} else {
-				Set<SiteSurfaceAccessibilityReport> set = new HashSet<SiteSurfaceAccessibilityReport>();
+				Set<SiteSurfaceAccessibilityReport> set = new THashSet<SiteSurfaceAccessibilityReport>();
 				set.add(report);
 				accessibilitiesByPositionInUniprotSeq.put(positionInUniprotSeq, set);
 			}
@@ -70,7 +72,7 @@ public class SurfaceAccessibilityProteinReport {
 	/**
 	 * @return the accesibilitiesByPositionInUniprotSeq
 	 */
-	public Map<Integer, Set<SiteSurfaceAccessibilityReport>> getAccessibilitiesByPositionInUniprotSeq() {
+	public TIntObjectHashMap<Set<SiteSurfaceAccessibilityReport>> getAccessibilitiesByPositionInUniprotSeq() {
 		return accessibilitiesByPositionInUniprotSeq;
 	}
 
@@ -88,8 +90,8 @@ public class SurfaceAccessibilityProteinReport {
 	 */
 	public List<String> getUniquePositionsInProteinKeys() {
 		List<String> list = new ArrayList<String>();
-		final Set<Integer> keySet = accessibilitiesByPositionInUniprotSeq.keySet();
-		for (Integer position : keySet) {
+		final int[] keySet = accessibilitiesByPositionInUniprotSeq.keys();
+		for (int position : keySet) {
 			final String key = uniprotACC + "-" + position;
 			if (!list.contains(key)) {
 				list.add(key);
@@ -104,12 +106,12 @@ public class SurfaceAccessibilityProteinReport {
 
 	public Map<String, Set<SiteSurfaceAccessibilityReport>> getReportsByPDBID() {
 		final List<SiteSurfaceAccessibilityReport> reports = getReports();
-		Map<String, Set<SiteSurfaceAccessibilityReport>> ret = new HashMap<String, Set<SiteSurfaceAccessibilityReport>>();
+		Map<String, Set<SiteSurfaceAccessibilityReport>> ret = new THashMap<String, Set<SiteSurfaceAccessibilityReport>>();
 		for (SiteSurfaceAccessibilityReport report : reports) {
 			if (ret.containsKey(report.getPdbID())) {
 				ret.get(report.getPdbID()).add(report);
 			} else {
-				Set<SiteSurfaceAccessibilityReport> set = new HashSet<SiteSurfaceAccessibilityReport>();
+				Set<SiteSurfaceAccessibilityReport> set = new THashSet<SiteSurfaceAccessibilityReport>();
 				set.add(report);
 				ret.put(report.getPdbID(), set);
 			}
@@ -131,7 +133,11 @@ public class SurfaceAccessibilityProteinReport {
 		StringBuilder sb = new StringBuilder();
 
 		List<Integer> positions = new ArrayList<Integer>();
-		positions.addAll(accessibilitiesByPositionInUniprotSeq.keySet());
+
+		for (int position : accessibilitiesByPositionInUniprotSeq.keys()) {
+			positions.add(position);
+		}
+
 		Collections.sort(positions);
 		for (int uniprotPosition : positions) {
 			final Set<SiteSurfaceAccessibilityReport> accesibilitySet = accessibilitiesByPositionInUniprotSeq

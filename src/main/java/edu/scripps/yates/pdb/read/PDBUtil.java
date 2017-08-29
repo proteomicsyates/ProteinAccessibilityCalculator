@@ -1,6 +1,5 @@
 package edu.scripps.yates.pdb.read;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -9,6 +8,7 @@ import org.apache.log4j.Logger;
 import edu.scripps.yates.annotations.uniprot.xml.DbReferenceType;
 import edu.scripps.yates.annotations.uniprot.xml.PropertyType;
 import edu.scripps.yates.pdb.model.DBRef;
+import gnu.trove.set.hash.THashSet;
 
 public class PDBUtil {
 	private final static Logger log = Logger.getLogger(PDBUtil.class);
@@ -81,7 +81,7 @@ public class PDBUtil {
 
 	public static DBRef getDBRef(PDBParser parser, String chainID) {
 		if (parser != null) {
-			Set<String> individualChainIDs = new HashSet<String>();
+			Set<String> individualChainIDs = new THashSet<String>();
 			if (chainID.contains("/")) {
 				String[] split = chainID.split("/");
 				for (int i = 0; i < split.length; i++) {

@@ -1,4 +1,4 @@
-package edu.scripps.yates.pdb.surface;
+package edu.scripps.yates.pdb;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,15 +21,15 @@ import gnu.trove.set.hash.THashSet;
  * Stores all SurfaceAccesibilityReport from a protein, stored by position in
  * its sequence
  */
-public class SurfaceAccessibilityProteinReport {
+public abstract class ProteinReport<T extends JMolAtomReport> {
 	private final String uniprotACC;
 	private final String uniprotProteinSequence;
-	private final TIntObjectHashMap<Set<SiteSurfaceAccessibilityReport>> accessibilitiesByPositionInUniprotSeq = new TIntObjectHashMap<Set<SiteSurfaceAccessibilityReport>>();
-	private final List<SiteSurfaceAccessibilityReport> reports = new ArrayList<SiteSurfaceAccessibilityReport>();
+	private final TIntObjectHashMap<Set<T>> reportsByPositionInUniprotSeq = new TIntObjectHashMap<Set<T>>();
+	private final List<T> reports = new ArrayList<T>();
 
-	private static final Logger log = Logger.getLogger(SurfaceAccessibilityProteinReport.class);
+	private static final Logger log = Logger.getLogger(ProteinReport.class);
 
-	public SurfaceAccessibilityProteinReport(String uniprotACC, String uniprotProteinSeq) {
+	public ProteinReport(String uniprotACC, String uniprotProteinSeq) {
 		this.uniprotACC = uniprotACC;
 		uniprotProteinSequence = uniprotProteinSeq;
 	}
@@ -41,11 +41,11 @@ public class SurfaceAccessibilityProteinReport {
 		return uniprotACC;
 	}
 
-	public Set<SiteSurfaceAccessibilityReport> getSurfaceAccessibilityReportsBySite(int positionInUniprotSeq) {
-		return accessibilitiesByPositionInUniprotSeq.get(positionInUniprotSeq);
+	public Set<T> getReportsBySite(int positionInUniprotSeq) {
+		return reportsByPositionInUniprotSeq.get(positionInUniprotSeq);
 	}
 
-	public void addSurfaceAccesibilityReport(SiteSurfaceAccessibilityReport report) {
+	public void addReport(T report) {
 
 		if (report.getUniprotACC() != null && !report.getUniprotACC().equals(uniprotACC)) {
 			log.warn("Reports from different proteins cannot be merged");
@@ -54,12 +54,12 @@ public class SurfaceAccessibilityProteinReport {
 
 		int positionInUniprotSeq = report.getPositionInUniprot();
 		if (positionInUniprotSeq > -1) {
-			if (accessibilitiesByPositionInUniprotSeq.containsKey(positionInUniprotSeq)) {
-				accessibilitiesByPositionInUniprotSeq.get(positionInUniprotSeq).add(report);
+			if (reportsByPositionInUniprotSeq.containsKey(positionInUniprotSeq)) {
+				reportsByPositionInUniprotSeq.get(positionInUniprotSeq).add(report);
 			} else {
-				Set<SiteSurfaceAccessibilityReport> set = new THashSet<SiteSurfaceAccessibilityReport>();
+				Set<T> set = new THashSet<T>();
 				set.add(report);
-				accessibilitiesByPositionInUniprotSeq.put(positionInUniprotSeq, set);
+				reportsByPositionInUniprotSeq.put(positionInUniprotSeq, set);
 			}
 		}
 		reports.add(report);
@@ -72,8 +72,8 @@ public class SurfaceAccessibilityProteinReport {
 	/**
 	 * @return the accesibilitiesByPositionInUniprotSeq
 	 */
-	public TIntObjectHashMap<Set<SiteSurfaceAccessibilityReport>> getAccessibilitiesByPositionInUniprotSeq() {
-		return accessibilitiesByPositionInUniprotSeq;
+	public TIntObjectHashMap<Set<T>> getReportsByPositionInUniprotSeq() {
+		return reportsByPositionInUniprotSeq;
 	}
 
 	/**
@@ -90,7 +90,7 @@ public class SurfaceAccessibilityProteinReport {
 	 */
 	public List<String> getUniquePositionsInProteinKeys() {
 		List<String> list = new ArrayList<String>();
-		final int[] keySet = accessibilitiesByPositionInUniprotSeq.keys();
+		final int[] keySet = reportsByPositionInUniprotSeq.keys();
 		for (int position : keySet) {
 			final String key = uniprotACC + "-" + position;
 			if (!list.contains(key)) {
@@ -100,18 +100,18 @@ public class SurfaceAccessibilityProteinReport {
 		return list;
 	}
 
-	public List<SiteSurfaceAccessibilityReport> getReports() {
+	public List<T> getReports() {
 		return reports;
 	}
 
-	public Map<String, Set<SiteSurfaceAccessibilityReport>> getReportsByPDBID() {
-		final List<SiteSurfaceAccessibilityReport> reports = getReports();
-		Map<String, Set<SiteSurfaceAccessibilityReport>> ret = new THashMap<String, Set<SiteSurfaceAccessibilityReport>>();
-		for (SiteSurfaceAccessibilityReport report : reports) {
+	public Map<String, Set<T>> getReportsByPDBID() {
+		final List<T> reports = getReports();
+		Map<String, Set<T>> ret = new THashMap<String, Set<T>>();
+		for (T report : reports) {
 			if (ret.containsKey(report.getPdbID())) {
 				ret.get(report.getPdbID()).add(report);
 			} else {
-				Set<SiteSurfaceAccessibilityReport> set = new THashSet<SiteSurfaceAccessibilityReport>();
+				Set<T> set = new THashSet<T>();
 				set.add(report);
 				ret.put(report.getPdbID(), set);
 			}
@@ -120,7 +120,7 @@ public class SurfaceAccessibilityProteinReport {
 	}
 
 	public boolean containsReportsForPosition(int positionInUniprotProtein) {
-		return accessibilitiesByPositionInUniprotSeq.containsKey(positionInUniprotProtein);
+		return reportsByPositionInUniprotSeq.containsKey(positionInUniprotProtein);
 	}
 
 	/*
@@ -134,16 +134,15 @@ public class SurfaceAccessibilityProteinReport {
 
 		List<Integer> positions = new ArrayList<Integer>();
 
-		for (int position : accessibilitiesByPositionInUniprotSeq.keys()) {
+		for (int position : reportsByPositionInUniprotSeq.keys()) {
 			positions.add(position);
 		}
 
 		Collections.sort(positions);
 		for (int uniprotPosition : positions) {
-			final Set<SiteSurfaceAccessibilityReport> accesibilitySet = accessibilitiesByPositionInUniprotSeq
-					.get(uniprotPosition);
-			for (SiteSurfaceAccessibilityReport siteSurfaceAccessibilityReport : accesibilitySet) {
-				sb.append(siteSurfaceAccessibilityReport.toString());
+			final Set<T> accesibilitySet = reportsByPositionInUniprotSeq.get(uniprotPosition);
+			for (T report : accesibilitySet) {
+				sb.append(report.toString());
 				sb.append("\n");
 			}
 		}
@@ -156,7 +155,7 @@ public class SurfaceAccessibilityProteinReport {
 				.add("uniprotProteinSequence", uniprotProteinSequence);
 		JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
 		builder.add("reports", arrayBuilder);
-		for (SiteSurfaceAccessibilityReport report : reports) {
+		for (T report : reports) {
 			arrayBuilder.add(report.toJson());
 		}
 		return builder.build();

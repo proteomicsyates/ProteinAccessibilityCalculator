@@ -4,15 +4,18 @@ import java.util.Set;
 
 import gnu.trove.set.hash.THashSet;
 
-public class SurfacePeptide {
+public class Peptide {
 	private String sequence;
-	private double ratio;
-	private final Set<SurfaceProtein> proteins = new THashSet<SurfaceProtein>();
+	private final Set<Protein> proteins = new THashSet<Protein>();
+	private Double ratio;
 
-	public SurfacePeptide(String sequence, double ratio) {
-		super();
+	public Peptide(String sequence, double ratio) {
 		this.sequence = sequence;
 		this.ratio = ratio;
+	}
+
+	public Peptide(String sequence) {
+		this.sequence = sequence;
 	}
 
 	/**
@@ -30,6 +33,14 @@ public class SurfacePeptide {
 		this.sequence = sequence;
 	}
 
+	public void addProtein(Protein protein) {
+		this.proteins.add(protein);
+	}
+
+	public Set<Protein> getProteins() {
+		return this.proteins;
+	}
+
 	/**
 	 * @return the ratio
 	 */
@@ -43,13 +54,5 @@ public class SurfacePeptide {
 	 */
 	public void setRatio(double ratio) {
 		this.ratio = ratio;
-	}
-
-	public void addProtein(SurfaceProtein protein) {
-		this.proteins.add(protein);
-	}
-
-	public Set<SurfaceProtein> getProteins() {
-		return this.proteins;
 	}
 }

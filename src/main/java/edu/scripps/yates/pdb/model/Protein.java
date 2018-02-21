@@ -4,11 +4,11 @@ import java.util.Set;
 
 import gnu.trove.set.hash.THashSet;
 
-public class SurfaceProtein {
+public class Protein {
 	private final String acc;
-	private final Set<SurfacePeptide> peptides = new THashSet<SurfacePeptide>();
+	private final Set<Peptide> peptides = new THashSet<Peptide>();
 
-	public SurfaceProtein(String acc) {
+	public Protein(String acc) {
 		this.acc = acc;
 	}
 
@@ -22,11 +22,11 @@ public class SurfaceProtein {
 	/**
 	 * @return the peptides
 	 */
-	public Set<SurfacePeptide> getPeptides() {
+	public Set<Peptide> getPeptides() {
 		return peptides;
 	}
 
-	public void addPeptide(SurfacePeptide peptide) {
+	public void addPeptide(Peptide peptide) {
 		this.peptides.add(peptide);
 		peptide.addProtein(this);
 	}

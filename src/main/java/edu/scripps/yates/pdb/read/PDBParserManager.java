@@ -26,7 +26,7 @@ public class PDBParserManager {
 		parsersMap.clear();
 	}
 
-	public PDBParser getPDBParserByPDBID(String pdbID) {
+	public PDBParser getPDBParserByPDBID(String pdbID, boolean parseCoordinates) {
 		// if it is in the notretrieved set, return null right away
 		if (pdbsNotRetrieved.contains(pdbID)) {
 			return null;
@@ -48,7 +48,7 @@ public class PDBParserManager {
 					}
 				}
 
-				PDBParser parser = new PDBParser(pdbFile.getAbsolutePath(), pdbID);
+				PDBParser parser = new PDBParser(pdbFile.getAbsolutePath(), pdbID, parseCoordinates);
 				parsersMap.put(pdbID, parser);
 				if (keepManagersInMemory) {
 					staticParsersMap.put(pdbID, parser);

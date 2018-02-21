@@ -15,7 +15,7 @@ public class PDBUtil {
 
 	public static String parseAA(String threeLetterAA) {
 		if (threeLetterAA.length() != 3) {
-			System.out.println("asdf");
+			return " ";
 		}
 		switch (threeLetterAA) {
 		case "ALA":

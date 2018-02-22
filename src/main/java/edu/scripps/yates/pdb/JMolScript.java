@@ -1,4 +1,4 @@
-package edu.scripps.yates.pdb.surface;
+package edu.scripps.yates.pdb;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -6,24 +6,24 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.jmol.api.JmolViewer;
 
-import edu.scripps.yates.pdb.model.Atom;
+import edu.scripps.yates.pdb.JMolScript;
+import edu.scripps.yates.pdb.distance.model.Distance;
+import edu.scripps.yates.pdb.model.Atom3D;
 import edu.scripps.yates.pdb.model.AtomType;
-import edu.scripps.yates.pdb.model.Chain;
 import edu.scripps.yates.pdb.model.DBRef;
-import edu.scripps.yates.pdb.surface.JMolScript;
-import edu.scripps.yates.pdb.surface.SiteSurfaceAccessibilityReport;
 import edu.scripps.yates.pdb.util.JMolCommandsUtil;
-import edu.scripps.yates.pdb.util.SurfaceAccebilityInputParameters;
-import edu.scripps.yates.utilities.strings.StringUtils;
-import gnu.trove.map.hash.THashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 public class PDBParser {
@@ -39,26 +39,33 @@ public class PDBParser {
 	private static final String MUTATION = "MUTATION: YES";
 	private final String filePath;
 	private static JmolViewer viewer;
-	private ArrayList<Atom> atomList;
+	private ArrayList<Atom3D> atomList;
 	private static boolean initialized = false;
-	private TIntObjectHashMap<List<Atom>> atomsByPosition;
+	private TIntObjectHashMap<List<Atom3D>> atomsByPosition;
 	private boolean opened = false;
 	private final String pdbID;
-	private static final Map<String, SiteSurfaceAccessibilityReport> reportsByPDBPositionAndChainAndRemovals = new THashMap<String, SiteSurfaceAccessibilityReport>();
 	private String selectedChainID;
 	private String experimentalMethod;
 	private Boolean mutation;
+	private Map<String, List<String>> linesMap = new HashMap<String, List<String>>();
+	private ArrayList<DBRef> dbRefs;
+	private final boolean parseCoordinates;
+	private final Map<String, Map<AtomType, List<Atom3D>>> atomsByAminoacidAndType = new HashMap<String, Map<AtomType, List<Atom3D>>>();
+	private static double minDistanceBetweenDifferentChains = Double.MAX_VALUE;
 
-	public PDBParser(String filePath, String pdbID) throws IOException {
+	public PDBParser(String filePath, String pdbID, boolean parseCoordinates) throws IOException {
 		this.filePath = filePath;
 		this.pdbID = pdbID;
-
+		this.parseCoordinates = parseCoordinates;
 	}
 
 	private void init(boolean forceOpen) {
 		if (!initialized) {
+			// set JMol log level to ERROR
+			org.jmol.util.Logger.setLogLevel(org.jmol.util.Logger.LEVEL_ERROR);
 			viewer = JmolViewer.allocateViewer(null, null);
 			viewer.setScreenDimension(600, 600);
+
 			initialized = true;
 			opened = false;
 		}
@@ -79,140 +86,7 @@ public class PDBParser {
 		return viewer;
 	}
 
-	public Map<String, SiteSurfaceAccessibilityReport> getSiteSurfaceAccesibilityFromParameters(
-			SurfaceAccebilityInputParameters inputParameters) {
-		if (inputParameters.getUniprotACC() != null) {
-			Map<String, SiteSurfaceAccessibilityReport> ret = new THashMap<String, SiteSurfaceAccessibilityReport>();
-			final SiteSurfaceAccessibilityReport report = getSiteSurfaceAccesibilityMappedToUniprot(inputParameters);
-			if (report != null) {
-				ret.put(report.getPositionInPDB() + report.getAtom().getChainID(), report);
-			}
-			return ret;
-		} else {
-			return getSiteSurfaceAccesibilityForPDBModel(inputParameters);
-		}
-	}
-
-	private Map<String, SiteSurfaceAccessibilityReport> getSiteSurfaceAccesibilityForPDBModel(
-			SurfaceAccebilityInputParameters inputParameters) {
-		// get the proteinSequence in PDB
-		Chain chain = inputParameters.getChain();
-		List<DBRef> dbRefs = new ArrayList<DBRef>();
-		if (chain != null) {
-			DBRef dbRef = PDBUtil.getDBRef(this, chain.getIdentifier());
-			dbRefs.add(dbRef);
-		} else {
-			dbRefs.addAll(getDBRefs());
-		}
-		boolean mutation = getMutation();
-		for (DBRef dbRef : dbRefs) {
-			if (dbRef != null && dbRef.getChainID() != null) {
-				chain = new Chain(pdbID, dbRef.getChainID() + "=0-0", -1.0f);
-				final String pdbProteinSeq = getSequence(dbRef);
-				if ("".equals(pdbProteinSeq)) {
-					log.warn("Protein sequence for chain " + dbRef.getChainID() + " was not obtained");
-					continue;
-				}
-				final List<Integer> aaPositionsInPDB = StringUtils.allPositionsOf(pdbProteinSeq,
-						inputParameters.getAa());
-				for (Integer positionInPDB : aaPositionsInPDB) {
-
-					final String key = positionInPDB + chain.getIdentifier() + inputParameters.isRemoveOtherChains()
-							+ inputParameters.isRemoveOtherMolecules();
-
-					if (reportsByPDBPositionAndChainAndRemovals.containsKey(key)) {
-						log.info("Surface  accesibility already calculated for site " + positionInPDB + " in chain "
-								+ chain.getIdentifier() + " of PDB " + chain.getPdbID() + " with removingOtherChains="
-								+ inputParameters.isRemoveOtherChains() + " and removingOtherMolcules="
-								+ inputParameters.isRemoveOtherMolecules());
-						continue;
-					}
-					// get the appropiate atom in the chain of PDB
-					final AtomType atomType = inputParameters.getAtomType();
-					final String aa = inputParameters.getAa();
-
-					Atom atom = getAtom(chain.getIdentifier(), aa, atomType, positionInPDB);
-					if (atom == null) {
-						log.warn("Atom is not found in chainID: '" + chain.getIdentifier() + "' in aa: '" + aa
-								+ "' atomType: '" + atomType + "' position in PDB: '" + positionInPDB + "'");
-						continue;
-					}
-					Double accesibility = getSurfaceAccesibilityOfAtom(atom, inputParameters.isRemoveOtherChains(),
-							inputParameters.isRemoveOtherMolecules());
-					if (accesibility != null) {
-						SiteSurfaceAccessibilityReport report = new SiteSurfaceAccessibilityReport(dbRef.getPdbID(),
-								accesibility, aa, atom, atomType, positionInPDB, inputParameters.getUniprotACC(),
-								inputParameters.getPositionInUniprotProtein(), chain.getResolution(),
-								inputParameters.isRemoveOtherChains(), inputParameters.isRemoveOtherMolecules(),
-								mutation, getExperimentalMethod());
-						reportsByPDBPositionAndChainAndRemovals.put(key, report);
-
-					}
-				}
-			} else {
-				log.debug("Chain " + chain.getIdentifier() + " not found in PDBParser " + this);
-			}
-		}
-		return reportsByPDBPositionAndChainAndRemovals;
-	}
-
-	private SiteSurfaceAccessibilityReport getSiteSurfaceAccesibilityMappedToUniprot(
-			SurfaceAccebilityInputParameters inputParameters) {
-		// get the proteinSequence in PDB
-		final Chain chain = inputParameters.getChain();
-		DBRef dbRef = PDBUtil.getDBRef(this, chain.getIdentifier());
-		if (dbRef != null && dbRef.getChainID() != null) {
-			final String pdbProteinSeq = getSequence(dbRef);
-			if ("".equals(pdbProteinSeq)) {
-				return null;
-			}
-			// see in which position the peptide is in the protein
-			final String uniprotPeptideSeq = inputParameters.getUniprotPeptideSeq();
-			if (pdbProteinSeq.contains(uniprotPeptideSeq)) {
-
-				final int peptideStartInPDB = pdbProteinSeq.lastIndexOf(uniprotPeptideSeq) + 1;
-				final int positionInPDB = peptideStartInPDB + inputParameters.getPositionInPeptide();
-				final String key = inputParameters.getReportKey();
-				if (reportsByPDBPositionAndChainAndRemovals.containsKey(key)) {
-					log.info("Surface accesibility already calculated for site " + positionInPDB + " in chain "
-							+ chain.getIdentifier() + " of PDB " + chain.getPdbID() + " with removingOtherChains="
-							+ inputParameters.isRemoveOtherChains() + " and removingOtherMolcules="
-							+ inputParameters.isRemoveOtherMolecules());
-					return reportsByPDBPositionAndChainAndRemovals.get(key);
-				}
-				// get the appropiate atom in the chain of PDB
-				final AtomType atomType = inputParameters.getAtomType();
-				final String aa = inputParameters.getAa();
-				Atom atom = getAtom(chain.getIdentifier(), aa, atomType, positionInPDB);
-				if (atom == null) {
-					log.debug("Atom is not found with chainID: '" + chain.getIdentifier() + "' in aa: '" + aa
-							+ "' atomType: '" + atomType + "' position in PDB: '" + positionInPDB + "'");
-					return null;
-				}
-				Double accesibility = getSurfaceAccesibilityOfAtom(atom, inputParameters.isRemoveOtherChains(),
-						inputParameters.isRemoveOtherMolecules());
-				if (accesibility != null) {
-					String experimentalMethod2 = getExperimentalMethod();
-					SiteSurfaceAccessibilityReport report = new SiteSurfaceAccessibilityReport(dbRef.getPdbID(),
-							accesibility, aa, atom, atomType, positionInPDB, inputParameters.getUniprotACC(),
-							inputParameters.getPositionInUniprotProtein(), chain.getResolution(),
-							inputParameters.isRemoveOtherChains(), inputParameters.isRemoveOtherMolecules(),
-							getMutation(), experimentalMethod2);
-					reportsByPDBPositionAndChainAndRemovals.put(key, report);
-					return report;
-
-				}
-			} else {
-				log.debug("Peptide " + uniprotPeptideSeq + " is not found in PDB entry " + dbRef.getPdbID() + " - "
-						+ dbRef.getChainID() + " with protein sequence: " + pdbProteinSeq);
-			}
-		} else {
-			log.debug("Chain " + chain.getIdentifier() + " not found in PDBParser " + this);
-		}
-		return null;
-	}
-
-	private Boolean getMutation() {
+	public Boolean getMutation() {
 		if (mutation == null) {
 			final List<String> lines = getLinesContaining(MUTATION);
 			if (lines != null && !lines.isEmpty()) {
@@ -224,15 +98,15 @@ public class PDBParser {
 		return mutation;
 	}
 
-	private Atom getAtom(String chainID, String aa, AtomType atomType, int positionInPDB) {
+	public Atom3D getAtom(String chainID, char aa, AtomType atomType, int positionInPDB) {
 
-		final List<Atom> atomsByAAPosition = getAtomsByAAPosition(positionInPDB);
+		final List<Atom3D> atomsByAAPosition = getAtomsByAAPosition(positionInPDB);
 		if (atomsByAAPosition == null) {
 			return null;
 		}
-		for (Atom atom : atomsByAAPosition) {
-			if (atom.getPositionInPDB() == positionInPDB && atom.getChainID().equals(chainID) && atom.getAa().equals(aa)
-					&& atom.getAtomType() == atomType) {
+		for (Atom3D atom : atomsByAAPosition) {
+			if (atom.getPositionInPDB() == positionInPDB && atom.getChainID().equals(chainID)
+					&& atom.getAa().equals(String.valueOf(aa)) && atom.getAtomType() == atomType) {
 				return atom;
 			}
 
@@ -240,7 +114,7 @@ public class PDBParser {
 		return null;
 	}
 
-	private Double getSurfaceAccesibilityOfAtom(Atom atom, boolean removeOtherChains, boolean removeOtherMolecules) {
+	public Double getSurfaceAccessibilityOfAtom(Atom3D atom, boolean removeOtherChains, boolean removeOtherMolecules) {
 
 		// if (!atom.getChainID().equals(selectedChainID)) {
 		init(true);
@@ -258,12 +132,12 @@ public class PDBParser {
 	public String executeCommands(JMolScript commandSet) {
 		init(false);
 
-		log.info("Executing JMol command set:");
-		log.info(commandSet.getCommandsToExecuteIndifferentLines());
+		log.info("Executing JMol command set:" + commandSet.getCommandsToExecuteIndifferentLines());
 		// getViewer().evalString(commandSet.getCommandsToExecute());
 		String strOutput = (String) getViewer().scriptWaitStatus(commandSet.getCommandsToExecute(), null);
-
-		log.info("Output of the command in JMol is " + strOutput);
+		if (!"".equals(strOutput)) {
+			log.debug("Output of the command in JMol is " + strOutput);
+		}
 		return strOutput;
 	}
 
@@ -304,19 +178,32 @@ public class PDBParser {
 		return null;
 	}
 
-	private List<Atom> getAtoms() {
-		if (atomList == null) {
-			atomList = new ArrayList<Atom>();
+	private List<Atom3D> getAtoms() {
+		if (atomList == null || atomList.isEmpty()) {
+			atomList = new ArrayList<Atom3D>();
 
-			if (!getLinesContaining(CA_ATOMS_ONLY).isEmpty()) {
-				return atomList;
-			}
-
+			// if (!getLinesContaining(CA_ATOMS_ONLY).isEmpty()) {
+			// return atomList;
+			// }
+			Set<String> chainsReaded = new HashSet<String>();
+			log.info("Reading PDB file...");
 			List<String> lines = getLinesStarting(ATOM);
-
+			log.info("Parsing " + lines.size() + " ATOM lines");
 			for (String string : lines) {
 				try {
-					Atom atom = new Atom(string);
+
+					Atom3D atom = new Atom3D(string, parseCoordinates);
+					if (!chainsReaded.contains(atom.getChainID())) {
+						log.info(atom.getChainID() + " chain ");
+						chainsReaded.add(atom.getChainID());
+					}
+					if (!atomsByAminoacidAndType.containsKey(atom.getAa())) {
+						atomsByAminoacidAndType.put(atom.getAa(), new HashMap<AtomType, List<Atom3D>>());
+					}
+					if (!atomsByAminoacidAndType.get(atom.getAa()).containsKey(atom.getAtomType())) {
+						atomsByAminoacidAndType.get(atom.getAa()).put(atom.getAtomType(), new ArrayList<Atom3D>());
+					}
+					atomsByAminoacidAndType.get(atom.getAa()).get(atom.getAtomType()).add(atom);
 					// if (atom.getAtomType() == AtomType.N) {
 					// position++;
 					// }
@@ -328,21 +215,21 @@ public class PDBParser {
 					log.debug(e);
 				}
 			}
-
+			log.info(atomList.size() + " atom list acquired");
 		}
 		return atomList;
 	}
 
-	private List<Atom> getAtomsByAAPosition(int aaPosition) {
+	private List<Atom3D> getAtomsByAAPosition(int aaPosition) {
 		if (atomsByPosition == null) {
-			atomsByPosition = new TIntObjectHashMap<List<Atom>>();
-			final List<Atom> atoms = getAtoms();
-			for (Atom atom : atoms) {
+			atomsByPosition = new TIntObjectHashMap<List<Atom3D>>();
+			final List<Atom3D> atoms = getAtoms();
+			for (Atom3D atom : atoms) {
 				final int position = atom.getPositionInPDB();
 				if (atomsByPosition.containsKey(position)) {
 					atomsByPosition.get(position).add(atom);
 				} else {
-					List<Atom> list = new ArrayList<Atom>();
+					List<Atom3D> list = new ArrayList<Atom3D>();
 					list.add(atom);
 					atomsByPosition.put(position, list);
 				}
@@ -351,9 +238,10 @@ public class PDBParser {
 		return atomsByPosition.get(aaPosition);
 	}
 
-	public List<Atom> getAtoms(String chainID, String aa, AtomType atomType) throws IOException, NotValidPDBException {
-		List<Atom> ret = new ArrayList<Atom>();
-		for (Atom atom : getAtoms()) {
+	public List<Atom3D> getAtoms(String chainID, String aa, AtomType atomType)
+			throws IOException, NotValidPDBException {
+		List<Atom3D> ret = new ArrayList<Atom3D>();
+		for (Atom3D atom : getAtoms()) {
 			if (atom.getChainID().equals(chainID) && atom.getAa().equals(aa) && atom.getAtomType() == atomType) {
 				ret.add(atom);
 			}
@@ -362,13 +250,30 @@ public class PDBParser {
 
 	}
 
-	public List<DBRef> getDBRefs() {
-		final List<String> lines = getLinesContaining(DBREF);
-		List<DBRef> list = new ArrayList<DBRef>();
-		for (String dbLine : lines) {
-			list.add(new DBRef(dbLine));
+	public List<String> getChainIDs() {
+
+		List<String> ret = new ArrayList<String>();
+		List<DBRef> dbRefs = getDBRefs();
+		for (DBRef dbRef : dbRefs) {
+			String chainID = dbRef.getChainID();
+			if (!ret.contains(chainID)) {
+				ret.add(chainID);
+			}
 		}
-		return list;
+		Collections.sort(ret);
+		return ret;
+	}
+
+	public List<DBRef> getDBRefs() {
+		if (dbRefs == null) {
+			final List<String> lines = getLinesContaining(DBREF);
+			dbRefs = new ArrayList<DBRef>();
+			for (String dbLine : lines) {
+				dbRefs.add(new DBRef(dbLine));
+			}
+		}
+		return dbRefs;
+
 	}
 
 	public String getExperimentalMethod() {
@@ -387,22 +292,32 @@ public class PDBParser {
 	public String getSequence(DBRef dbRef) {
 		StringBuilder sb = new StringBuilder();
 		int position = -1;
-		for (Atom atom : getAtoms()) {
+		List<Atom3D> atoms = getAtoms();
+
+		for (Atom3D atom : atoms) {
 			if (dbRef.getChainID().equals(atom.getChainID())) {
 				if ("".equals(sb.toString())) {
 					// if this is the first AA and the position is not 1, fill
 					// the sequence with "X"s until that position
 					if (atom.getPositionInPDB() > 1) {
 						for (int i = 1; i < atom.getPositionInPDB(); i++) {
-							sb.append("X");
+							sb.append("?");
 						}
 					}
 				}
 				if (position != atom.getPositionInPDB()) {
+					if (sb.toString().length() + 1 < atom.getPositionInPDB()) {
+						for (int i = sb.toString().length() + 1; i < atom.getPositionInPDB(); i++) {
+							sb.append("?");
+						}
+					}
 					sb.append(atom.getAa());
 					position = atom.getPositionInPDB();
 				}
 			}
+		}
+		if ("".equals(sb.toString())) {
+			log.info(dbRef);
 		}
 		return sb.toString();
 	}
@@ -411,8 +326,15 @@ public class PDBParser {
 
 		// When filteredLines is closed, it closes underlying stream as well as
 		// underlying file.
+		if (linesMap.containsKey(containing)) {
+			log.info(containing + " already readed");
+			return linesMap.get(containing);
+		}
 		try {
-			return Files.lines(Paths.get(filePath)).filter(s -> s.contains(containing)).collect(Collectors.toList());
+			List<String> list = Files.lines(Paths.get(filePath)).filter(s -> s.contains(containing))
+					.collect(Collectors.toList());
+			linesMap.put(containing, list);
+			return list;
 		} catch (IOException e) {
 			return Collections.emptyList();
 		}
@@ -464,4 +386,135 @@ public class PDBParser {
 
 		return false;
 	}
+
+	// public Collection<Distance> getDistancesOfAtom(double distanceThreshold,
+	// String aa1, AtomType atomType1, String aa2,
+	// AtomType atomType2) {
+	// Set<Distance> ret = new HashSet<Distance>();
+	// List<String> chainIDs = getChainIDs();
+	// for (int i = 0; i < chainIDs.size(); i++) {
+	// String chain1ID = chainIDs.get(i);
+	// for (int j = i; j < chainIDs.size(); j++) {
+	// String chain2ID = chainIDs.get(j);
+	// executeCommands(JMolCommandsUtil.getMeasureOffScript());
+	// JMolScript calculateDistanceScript =
+	// JMolCommandsUtil.getCalculateDistanceScript(chain1ID, aa1,
+	// atomType1, chain2ID, aa2, atomType2);
+	// executeCommands(calculateDistanceScript);
+	// String output = executeCommands(JMolCommandsUtil.getMeasureListScript());
+	// ret.addAll(parseDistanceOutput(distanceThreshold, output));
+	// }
+	// }
+	// return ret;
+	// }
+	public Collection<Distance> getDistancesOfAtom(double distanceThreshold, Atom3D atom1, String aa2,
+			AtomType atomType2) {
+		Set<Distance> ret = new HashSet<Distance>();
+
+		List<Atom3D> atoms2 = getAtomsByAminacidAndType(aa2, atomType2);
+
+		for (int j = 0; j < atoms2.size(); j++) {
+			Atom3D atom2 = atoms2.get(j);
+			double distance = atom1.distance(atom2);
+			if (!atom2.getChainID().contentEquals(atom1.getChainID())) {
+				if (minDistanceBetweenDifferentChains > distance) {
+					minDistanceBetweenDifferentChains = distance;
+					log.info("distance of atoms of different chains = " + distance + "\t" + atom1.getPositionInPDB()
+							+ atom1.getChainID() + "\t" + atom2.getPositionInPDB() + "-" + atom2.getAa() + "-"
+							+ atom2.getChainID());
+
+				}
+			}
+
+			if (distance <= distanceThreshold) {
+				ret.add(new Distance(atom1, atom2, distance));
+			}
+		}
+
+		return ret;
+	}
+
+	private List<Atom3D> getAtomsByAminacidAndType(String aa, AtomType atomType) {
+		getAtoms();
+		if (atomsByAminoacidAndType.containsKey(aa)) {
+			Map<AtomType, List<Atom3D>> atomsByType = atomsByAminoacidAndType.get(aa);
+			if (atomsByType.containsKey(atomType)) {
+				return atomsByType.get(atomType);
+			}
+		}
+		return Collections.emptyList();
+	}
+
+	// private Set<Distance> parseDistanceOutput(double distanceThreshold,
+	// String output) {
+	// Set<Distance> ret = new HashSet<Distance>();
+	// List<String> lines = new ArrayList<String>();
+	//
+	// if (output.contains("\n")) {
+	// boolean first = true;
+	// String[] split = output.split("\n");
+	// for (String line : split) {
+	// if (!first) {
+	// lines.add(line);
+	// } else {
+	// first = false;
+	// }
+	// }
+	// } else {
+	// throw new IllegalArgumentException("Check format of output: " + output);
+	// }
+	//
+	// for (String line : lines) {
+	// if (line.contains("\t")) {
+	// String[] cols = line.split("\t");
+	// try {
+	// double distance = Double.valueOf(cols[1]);
+	// if (distance <= distanceThreshold) {
+	//
+	// Atom3D originalAtom = parseAtomFromDistanceReport(cols[3]);
+	// Atom3D endAtom = parseAtomFromDistanceReport(cols[4]);
+	// ret.add(new Distance(originalAtom, endAtom, distance));
+	// }
+	// } catch (NumberFormatException e) {
+	// e.printStackTrace();
+	// }
+	// } else {
+	//
+	// throw new IllegalArgumentException("Check format of a line of the output:
+	// " + line);
+	//
+	// }
+	// }
+	// return ret;
+	// }
+
+	// /**
+	// * Parses a string like this into a {@link Atom3D}: <br>
+	// * <b>[LYS]263:A.NZ #9006</b>
+	// *
+	// * @param string
+	// * @return
+	// */
+	// private Atom3D parseAtomFromDistanceReport(String string) {
+	// try {
+	// String[] spaceSplitted = string.split(" ");
+	// int atomNumber = Integer.valueOf(spaceSplitted[1].substring(1));
+	// AtomType atomType = AtomType.valueOf(spaceSplitted[0].split("\\.")[1]);
+	// String threeLetterAA = string.substring(string.indexOf("[") + 1,
+	// string.indexOf("]"));
+	// String aa = JMolCommandsUtil.convertToOneLetterAA(threeLetterAA);
+	// int positionInPDB = Integer.valueOf(string.substring(string.indexOf("]")
+	// + 1, string.indexOf(":")));
+	// String chainID = string.substring(string.indexOf(":") + 1,
+	// string.indexOf("."));
+	// Atom3D atom = new Atom3D(atomNumber, atomType, aa, positionInPDB,
+	// chainID);
+	// return atom;
+	// } catch (Exception e) {
+	// e.printStackTrace();
+	// throw new IllegalArgumentException("Error parsing atom from output of
+	// distances: " + string);
+	// }
+	//
+	// }
 }

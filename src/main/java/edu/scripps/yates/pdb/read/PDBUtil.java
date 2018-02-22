@@ -15,7 +15,7 @@ public class PDBUtil {
 
 	public static String parseAA(String threeLetterAA) {
 		if (threeLetterAA.length() != 3) {
-			System.out.println("asdf");
+			return " ";
 		}
 		switch (threeLetterAA) {
 		case "ALA":
@@ -61,7 +61,7 @@ public class PDBUtil {
 		case "CGU":
 			return "E";
 		case "UNK":// unknown
-			return " ";
+			return "X";
 		default:
 			log.warn(threeLetterAA + " is not a recognizable AA");
 			return " ";

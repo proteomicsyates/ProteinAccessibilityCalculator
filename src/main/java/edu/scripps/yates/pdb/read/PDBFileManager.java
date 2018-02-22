@@ -47,6 +47,7 @@ public class PDBFileManager {
 		if (pdbFile != null && pdbFile.exists() && pdbFile.isFile()) {
 			File finalFile = getFile(pdbID);
 			FileUtils.moveFile(pdbFile, finalFile);
+			log.info("PDB file saved at: " + finalFile);
 			return finalFile;
 		} else {
 			log.warn("Error during saving PDB file " + pdbID);

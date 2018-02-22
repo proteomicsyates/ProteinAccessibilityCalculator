@@ -11,6 +11,7 @@ public class PropertiesReader {
 
 	public static final String PDB_FOLDER = "pdb_files_folder";
 	public static final String UNIPROT_FOLDER = "uniprot_files_folder";
+	public static final String UNIPROT_VERSION = "uniprot_version";
 	public static final String AMINOACIDS = "AAs";
 	public static final String ENZYME_NAME = "enzyme_name";
 	public static final String MISSEDCLEAVAGES = "missedCleavages";
@@ -24,6 +25,9 @@ public class PropertiesReader {
 	public static final String SKIP_FIRST_LINE = "skip_first_line";
 	public static final String PEPTIDE_FILTER_REGEXP = "peptide_filter_regexp";
 	public static final String IGNORE_PEPTIDE_NOT_FOUND_IN_DB = "ignore_peptide_not_found_in_db";
+	public static final String CALCULATION_TYPE = "calculation_type";
+	public static final String ONE_MODEL_PER_PROTEIN = "one_model_pre_protein";
+	public static final String PDB_IDS = "pdb_ids";
 
 	private static File file;
 

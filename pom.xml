@@ -3,7 +3,7 @@
 	<groupId>edu.scripps.yates</groupId>
 	<version>1.0</version>
 	<name>PDB structures module</name>
-	<artifactId>psa-calculator</artifactId>
+	<artifactId>pac-calculator</artifactId>
 	<description>Java module for managing PDB structures</description>
 	<distributionManagement>
 		<repository>

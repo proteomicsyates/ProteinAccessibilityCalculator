@@ -98,56 +98,6 @@ public class SiteSurfaceAccessibilityReport {
 	}
 
 	/**
-	 * Parse a string as oposite function of toString()
-	 *
-	 * @param string
-	 * @return
-	 */
-	public static SiteSurfaceAccessibilityReport getFromString(String string) {
-		try {
-			final String[] split = string.split(sep);
-
-			double accesibility = Double.valueOf(split[0]);
-			String aa = split[1];
-
-			String pdbID = split[2];
-			int positionInPDB = Integer.valueOf(split[3]);
-			String uniprotACC = split[4];
-			int positionInUniprot = Integer.valueOf(split[5]);
-			Float resolution = null;
-			try {
-				resolution = Float.valueOf(split[6]);
-			} catch (Exception e) {
-			}
-			AtomType atomType = AtomType.getByName(split[8]);
-			// // get the rest of the splitted items to construct the Atom
-			// object
-			StringBuilder sb = new StringBuilder();
-			String chainID = split[9];
-			String atomNumber = split[7];
-			sb.append(atomNumber + sep + atomType + sep + chainID);
-			Boolean removeOtherChains = Boolean.valueOf(split[10]);
-			Boolean removeOtherMolecules = Boolean.valueOf(split[11]);
-			Boolean containsMutation = Boolean.valueOf(split[12]);
-			String method = split[13];
-			// for (int i = 8; i < split.length; i++) {
-			// sb.append(split[i]).append(sep);
-			// }
-			// Atom atom = Atom.getFromString(sb.toString(), aa, positionInPDB);
-			Atom atom = Atom.getFromString(sb.toString(), aa, positionInPDB);
-			SiteSurfaceAccessibilityReport report = new SiteSurfaceAccessibilityReport(pdbID, accesibility, aa, atom,
-					atomType, positionInPDB, uniprotACC, positionInUniprot, resolution, removeOtherChains,
-					removeOtherMolecules, containsMutation, method);
-			return report;
-		} catch (
-
-		Exception e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	/**
 	 * @return the positionInPDB
 	 */
 	public int getPositionInPDB() {

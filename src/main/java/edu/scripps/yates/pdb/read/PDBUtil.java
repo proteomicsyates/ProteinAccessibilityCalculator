@@ -61,7 +61,7 @@ public class PDBUtil {
 		case "CGU":
 			return "E";
 		case "UNK":// unknown
-			return " ";
+			return "X";
 		default:
 			log.warn(threeLetterAA + " is not a recognizable AA");
 			return " ";

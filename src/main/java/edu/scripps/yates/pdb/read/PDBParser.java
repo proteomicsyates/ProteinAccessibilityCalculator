@@ -293,6 +293,7 @@ public class PDBParser {
 		StringBuilder sb = new StringBuilder();
 		int position = -1;
 		List<Atom3D> atoms = getAtoms();
+
 		for (Atom3D atom : atoms) {
 			if (dbRef.getChainID().equals(atom.getChainID())) {
 				if ("".equals(sb.toString())) {
@@ -300,11 +301,16 @@ public class PDBParser {
 					// the sequence with "X"s until that position
 					if (atom.getPositionInPDB() > 1) {
 						for (int i = 1; i < atom.getPositionInPDB(); i++) {
-							sb.append("X");
+							sb.append("?");
 						}
 					}
 				}
 				if (position != atom.getPositionInPDB()) {
+					if (sb.toString().length() + 1 < atom.getPositionInPDB()) {
+						for (int i = sb.toString().length() + 1; i < atom.getPositionInPDB(); i++) {
+							sb.append("?");
+						}
+					}
 					sb.append(atom.getAa());
 					position = atom.getPositionInPDB();
 				}

@@ -26,7 +26,7 @@ public class PropertiesReader {
 	public static final String PEPTIDE_FILTER_REGEXP = "peptide_filter_regexp";
 	public static final String IGNORE_PEPTIDE_NOT_FOUND_IN_DB = "ignore_peptide_not_found_in_db";
 	public static final String CALCULATION_TYPE = "calculation_type";
-	public static final String ONE_MODEL_PER_PROTEIN = "one_model_pre_protein";
+	public static final String ONE_MODEL_PER_PROTEIN = "one_model_per_protein";
 	public static final String PDB_IDS = "pdb_ids";
 
 	private static File file;

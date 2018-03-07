@@ -20,7 +20,8 @@ The input parameter file is a simple text with a set of name-value pairs of para
  - For ***pdb_surface*** running mode, look at example parameter file [here](https://raw.githubusercontent.com/proteomicsyates/ProteinAccessibilityCalculator/master/input_surface_pdb.properties).
  - For ***distance*** running mode, look at example parameter file [here](https://raw.githubusercontent.com/proteomicsyates/ProteinAccessibilityCalculator/master/input_distances.properties).
 
-### For any customization of the program, report any issue or ask any question, please contact to Salvador Martinez-Bartolome (salvador at scripss.edu)
+## Getting help
+For any customization of the program, report any issue or ask any question, please contact to **Salvador Mart?nez-Bartolome** (salvador at scripss.edu)
 
 
 

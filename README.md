@@ -11,9 +11,11 @@ You can get the latest version of the software at: http://sealion.scripps.edu/pa
 
 ## How to run it
 ```
-java -jar pac-calculator-1.0.jar input_parameters.txt
+java -jar pac-calculator-1.0.jar input_parameters.properties
 ```
 ## Parameters files
+The input parameter file is a simple text with a set of name-value pairs of parameters.
+
  - For ***surface*** running mode, look at example parameter file [here](https://raw.githubusercontent.com/proteomicsyates/ProteinAccessibilityCalculator/master/input_surface.properties).
  - For ***pdb_surface*** running mode, look at example parameter file [here](https://raw.githubusercontent.com/proteomicsyates/ProteinAccessibilityCalculator/master/input_surface_pdb.properties).
  - For ***distance*** running mode, look at example parameter file [here](https://raw.githubusercontent.com/proteomicsyates/ProteinAccessibilityCalculator/master/input_distances.properties).

@@ -1,8 +1,11 @@
 package edu.scripps.yates.pdb.model;
 
+import org.apache.log4j.Logger;
+
 public class Chain {
+	private final static Logger log = Logger.getLogger(Chain.class);
 	private final String identifier;
-	private final int start;
+	private int start;
 	private final int end;
 	private final String pdbID;
 	private Float resolution;
@@ -15,9 +18,15 @@ public class Chain {
 	public Chain(String pdbID, String text, Float resolution) {
 		final String[] split = text.split("=");
 		identifier = split[0].trim();
-		final String[] split2 = split[1].split("-");
-		start = Integer.valueOf(split2[0].trim());
-		end = Integer.valueOf(split2[1].trim());
+		if (split[1].contains("-") && !"-".equals(split[1])) {
+			final String[] split2 = split[1].split("-");
+			start = Integer.valueOf(split2[0].trim());
+			end = Integer.valueOf(split2[1].trim());
+		} else {
+			start = -1;
+			end = -1;
+		}
+
 		this.resolution = resolution;
 		this.pdbID = pdbID.trim();
 	}

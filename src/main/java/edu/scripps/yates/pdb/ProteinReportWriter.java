@@ -10,6 +10,7 @@ import edu.scripps.yates.pdb.model.Peptide;
 import edu.scripps.yates.pdb.surface.SurfaceReport;
 import edu.scripps.yates.utilities.proteomicsmodel.Ratio;
 import edu.scripps.yates.utilities.strings.StringUtils;
+import gnu.trove.list.array.TIntArrayList;
 
 public class ProteinReportWriter {
 	/**
@@ -31,22 +32,22 @@ public class ProteinReportWriter {
 		final String uniprotProteinSequence = proteinReport.getUniprotProteinSequence();
 		final int positionOfPeptideInProtein = uniprotProteinSequence.indexOf(peptideSequence);
 
-		List<Integer> positionsOfAAInPeptide = StringUtils.allPositionsOf(peptideSequence, aa);
-		for (Integer positionOfAAInPeptide : positionsOfAAInPeptide) {
-			int positionOfAAInProtein = positionOfAAInPeptide + positionOfPeptideInProtein;
-			Set<JMolAtomReport> reports = proteinReport.getReportsBySite(positionOfAAInProtein);
+		final TIntArrayList positionsOfAAInPeptide = StringUtils.allPositionsOf(peptideSequence, aa);
+		for (final int positionOfAAInPeptide : positionsOfAAInPeptide.toArray()) {
+			final int positionOfAAInProtein = positionOfAAInPeptide + positionOfPeptideInProtein;
+			final Set<JMolAtomReport> reports = proteinReport.getReportsBySite(positionOfAAInProtein);
 			if (reports != null) {
 				if (!printOnlyTheMostAccessibleSite) {
-					for (JMolAtomReport report : reports) {
+					for (final JMolAtomReport report : reports) {
 						printReportForSite(fw, proteinReport.getUniprotACC(), ratio, psmID, peptideSequence,
 								positionOfAAInPeptide, report);
 					}
 				} else {
 					JMolAtomReport bestReport = null;
 					double accessibility = -1;
-					for (JMolAtomReport report : reports) {
+					for (final JMolAtomReport report : reports) {
 						if (report instanceof SurfaceReport) {
-							SurfaceReport surfaceReport = (SurfaceReport) report;
+							final SurfaceReport surfaceReport = (SurfaceReport) report;
 							if (surfaceReport.getAccessibility() != null
 									&& surfaceReport.getAccessibility() > accessibility) {
 								accessibility = surfaceReport.getAccessibility();
@@ -76,7 +77,7 @@ public class ProteinReportWriter {
 
 		final List<JMolAtomReport> reports = proteinReport.getReports();
 		if (reports != null) {
-			for (JMolAtomReport surfaceAccessibilityReport : reports) {
+			for (final JMolAtomReport surfaceAccessibilityReport : reports) {
 				printReport(fw, surfaceAccessibilityReport);
 			}
 		}
@@ -101,21 +102,21 @@ public class ProteinReportWriter {
 		final String uniprotProteinSequence = proteinReport.getUniprotProteinSequence();
 		final int positionOfPeptideInProtein = uniprotProteinSequence.indexOf(peptide.getSequence());
 
-		List<Integer> positionsOfAAInPeptide = StringUtils.allPositionsOf(peptide.getSequence(), aa);
-		for (Integer positionOfAAInPeptide : positionsOfAAInPeptide) {
-			int positionOfAAInProtein = positionOfAAInPeptide + positionOfPeptideInProtein;
+		final TIntArrayList positionsOfAAInPeptide = StringUtils.allPositionsOf(peptide.getSequence(), aa);
+		for (final int positionOfAAInPeptide : positionsOfAAInPeptide.toArray()) {
+			final int positionOfAAInProtein = positionOfAAInPeptide + positionOfPeptideInProtein;
 			final Set<JMolAtomReport> reports = proteinReport.getReportsBySite(positionOfAAInProtein);
 			if (reports != null) {
 				if (!printOnlyTheMostAccessibleSite) {
-					for (JMolAtomReport surfaceAccessibilityReport : reports) {
+					for (final JMolAtomReport surfaceAccessibilityReport : reports) {
 						printReportForSite(fw, peptide, positionOfAAInPeptide, aa, surfaceAccessibilityReport);
 					}
 				} else {
 					JMolAtomReport bestReport = null;
 					double accessibility = -1;
-					for (JMolAtomReport report : reports) {
+					for (final JMolAtomReport report : reports) {
 						if (report instanceof SurfaceReport) {
-							SurfaceReport vsurfaceReport = (SurfaceReport) report;
+							final SurfaceReport vsurfaceReport = (SurfaceReport) report;
 							if (vsurfaceReport.getAccessibility() != null
 									&& vsurfaceReport.getAccessibility() > accessibility) {
 								accessibility = vsurfaceReport.getAccessibility();
@@ -134,10 +135,10 @@ public class ProteinReportWriter {
 
 	private static void printReportForSite(Writer fw, Peptide peptide, int positionOfAAInPeptide, String aa,
 			JMolAtomReport report) throws IOException {
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		sb.append(peptide.getSequence()).append("\t").append(positionOfAAInPeptide).append("\t");
 
-		String ratioString = printRatio(peptide.getRatio());
+		final String ratioString = printRatio(peptide.getRatio());
 		sb.append(ratioString).append("\t");
 		sb.append(report);
 		sb.append("\n");
@@ -146,7 +147,7 @@ public class ProteinReportWriter {
 	}
 
 	private static void printReport(Writer fw, JMolAtomReport report) throws IOException {
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		sb.append(report);
 		sb.append("\n");
 		fw.write(sb.toString());
@@ -159,12 +160,12 @@ public class ProteinReportWriter {
 
 	private static void printReportForSite(FileWriter fw, String accession, Ratio ratio, String psmID,
 			String peptideSequence, int positionOfAAInPeptide, JMolAtomReport report) throws IOException {
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		sb.append(accession).append("\t").append(psmID).append("\t").append(peptideSequence).append("\t")
 				.append(positionOfAAInPeptide).append("\t").append(report).append("\t");
 
 		final double value = ratio.getValue();
-		String ratioString = printRatio(value);
+		final String ratioString = printRatio(value);
 		sb.append(ratioString);
 		sb.append("\n");
 		fw.write(sb.toString());
@@ -175,7 +176,7 @@ public class ProteinReportWriter {
 		if (value == null) {
 			return "";
 		}
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		if (Double.isInfinite(value)) {
 			if (Double.compare(value, Double.NEGATIVE_INFINITY) == 0) {
 				sb.append(-1000);

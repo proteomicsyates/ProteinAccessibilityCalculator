@@ -5,7 +5,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import edu.scripps.yates.pdb.model.SurfacePeptide;
@@ -14,6 +13,7 @@ import edu.scripps.yates.pdb.surface.SiteSurfaceAccessibilityReport;
 import edu.scripps.yates.pdb.surface.SurfaceAccessibilityProteinReport;
 import edu.scripps.yates.utilities.proteomicsmodel.Ratio;
 import edu.scripps.yates.utilities.strings.StringUtils;
+import gnu.trove.list.array.TIntArrayList;
 
 public class SurfaceAccesibilityReportWriter {
 	/**
@@ -36,12 +36,12 @@ public class SurfaceAccesibilityReportWriter {
 		final String uniprotProteinSequence = surfaceAccesibilityProteinReport.getUniprotProteinSequence();
 		final int positionOfPeptideInProtein = uniprotProteinSequence.indexOf(peptideSequence);
 
-		List<Integer> positionsOfAAInPeptide = StringUtils.allPositionsOf(peptideSequence, aa);
+		final TIntArrayList positionsOfAAInPeptide = StringUtils.allPositionsOf(peptideSequence, aa);
 		// in order to not repeat sites, coming from different peptides
-		Set<Integer> positionsInProtein = new HashSet<Integer>();
+		final Set<Integer> positionsInProtein = new HashSet<Integer>();
 
-		for (Integer positionOfAAInPeptide : positionsOfAAInPeptide) {
-			int positionOfAAInProtein = positionOfAAInPeptide + positionOfPeptideInProtein;
+		for (final int positionOfAAInPeptide : positionsOfAAInPeptide.toArray()) {
+			final int positionOfAAInProtein = positionOfAAInPeptide + positionOfPeptideInProtein;
 			if (positionsInProtein.contains(positionOfAAInProtein)) {
 				continue;
 			}
@@ -53,8 +53,8 @@ public class SurfaceAccesibilityReportWriter {
 					SiteSurfaceAccessibilityReport bestAccessibleSite = null;
 					double maxError = Double.MAX_VALUE;
 
-					for (SiteSurfaceAccessibilityReport surfaceAccessibilityReport : surfaceAccesibilityReports) {
-						double errorValue = ErrorFunction.getErrorValue(ratio.getValue(),
+					for (final SiteSurfaceAccessibilityReport surfaceAccessibilityReport : surfaceAccesibilityReports) {
+						final double errorValue = ErrorFunction.getErrorValue(ratio.getValue(),
 								surfaceAccessibilityReport.getAccesibility());
 
 						if (errorValue < maxError) {
@@ -66,14 +66,14 @@ public class SurfaceAccesibilityReportWriter {
 					printReportForSite(fw, surfaceAccesibilityProteinReport.getUniprotACC(), ratio, psmID,
 							peptideSequence, positionOfAAInPeptide, aa, bestAccessibleSite);
 				} else if (!printOnlyTheMostAccessibleSite) {
-					for (SiteSurfaceAccessibilityReport surfaceAccessibilityReport : surfaceAccesibilityReports) {
+					for (final SiteSurfaceAccessibilityReport surfaceAccessibilityReport : surfaceAccesibilityReports) {
 						printReportForSite(fw, surfaceAccesibilityProteinReport.getUniprotACC(), ratio, psmID,
 								peptideSequence, positionOfAAInPeptide, aa, surfaceAccessibilityReport);
 					}
 				} else {
 					SiteSurfaceAccessibilityReport mostAccessibleSite = null;
 					double accessibility = -1;
-					for (SiteSurfaceAccessibilityReport surfaceAccessibilityReport : surfaceAccesibilityReports) {
+					for (final SiteSurfaceAccessibilityReport surfaceAccessibilityReport : surfaceAccesibilityReports) {
 						if (surfaceAccessibilityReport.getAccesibility() > accessibility) {
 							accessibility = surfaceAccessibilityReport.getAccesibility();
 							mostAccessibleSite = surfaceAccessibilityReport;
@@ -107,21 +107,21 @@ public class SurfaceAccesibilityReportWriter {
 		final String uniprotProteinSequence = surfaceAccesibilityProteinReport.getUniprotProteinSequence();
 		final int positionOfPeptideInProtein = uniprotProteinSequence.indexOf(peptide.getSequence());
 
-		List<Integer> positionsOfAAInPeptide = StringUtils.allPositionsOf(peptide.getSequence(), aa);
-		for (Integer positionOfAAInPeptide : positionsOfAAInPeptide) {
-			int positionOfAAInProtein = positionOfAAInPeptide + positionOfPeptideInProtein;
+		final TIntArrayList positionsOfAAInPeptide = StringUtils.allPositionsOf(peptide.getSequence(), aa);
+		for (final int positionOfAAInPeptide : positionsOfAAInPeptide.toArray()) {
+			final int positionOfAAInProtein = positionOfAAInPeptide + positionOfPeptideInProtein;
 			final Set<SiteSurfaceAccessibilityReport> surfaceAccesibilityReports = surfaceAccesibilityProteinReport
 					.getSurfaceAccessibilityReportsBySite(positionOfAAInProtein);
 			if (surfaceAccesibilityReports != null) {
 				if (!printOnlyTheMostAccessibleSite) {
-					for (SiteSurfaceAccessibilityReport surfaceAccessibilityReport : surfaceAccesibilityReports) {
+					for (final SiteSurfaceAccessibilityReport surfaceAccessibilityReport : surfaceAccesibilityReports) {
 						printReportForSite(fw, surfaceAccesibilityProteinReport.getUniprotACC(), peptide,
 								positionOfAAInPeptide, aa, surfaceAccessibilityReport);
 					}
 				} else {
 					SiteSurfaceAccessibilityReport mostAccessibleSite = null;
 					double accessibility = -1;
-					for (SiteSurfaceAccessibilityReport surfaceAccessibilityReport : surfaceAccesibilityReports) {
+					for (final SiteSurfaceAccessibilityReport surfaceAccessibilityReport : surfaceAccesibilityReports) {
 						if (surfaceAccessibilityReport.getAccesibility() > accessibility) {
 							accessibility = surfaceAccessibilityReport.getAccesibility();
 							mostAccessibleSite = surfaceAccessibilityReport;
@@ -137,11 +137,11 @@ public class SurfaceAccesibilityReportWriter {
 
 	private static void printReportForSite(Writer fw, String accession, SurfacePeptide peptide,
 			int positionOfAAInPeptide, String aa, SiteSurfaceAccessibilityReport surfaceAccesibilityReport)
-					throws IOException {
-		StringBuilder sb = new StringBuilder();
+			throws IOException {
+		final StringBuilder sb = new StringBuilder();
 		sb.append(peptide.getSequence()).append("\t").append(positionOfAAInPeptide).append("\t");
 
-		String ratioString = printRatio(peptide.getRatio());
+		final String ratioString = printRatio(peptide.getRatio());
 		sb.append(ratioString).append("\t");
 		sb.append(surfaceAccesibilityReport);
 		sb.append("\n");
@@ -156,12 +156,12 @@ public class SurfaceAccesibilityReportWriter {
 	private static void printReportForSite(FileWriter fw, String accession, Ratio ratio, String psmID,
 			String peptideSequence, int positionOfAAInPeptide, String aa,
 			SiteSurfaceAccessibilityReport surfaceAccesibilityReport) throws IOException {
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		sb.append(accession).append("\t").append(psmID).append("\t").append(peptideSequence).append("\t")
 				.append(positionOfAAInPeptide).append("\t").append(surfaceAccesibilityReport).append("\t");
 
 		final double value = ratio.getValue();
-		String ratioString = printRatio(value);
+		final String ratioString = printRatio(value);
 		sb.append(ratioString);
 		sb.append("\n");
 		fw.write(sb.toString());
@@ -169,7 +169,7 @@ public class SurfaceAccesibilityReportWriter {
 	}
 
 	private static String printRatio(double value) {
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		if (Double.isInfinite(value)) {
 			if (Double.compare(value, Double.NEGATIVE_INFINITY) == 0) {
 				sb.append(-1000);

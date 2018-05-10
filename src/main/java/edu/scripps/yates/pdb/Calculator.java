@@ -32,6 +32,8 @@ import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.maths.Maths;
 import edu.scripps.yates.utilities.strings.StringUtils;
 import edu.scripps.yates.utilities.util.Pair;
+import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
 import gnu.trove.set.hash.TIntHashSet;
@@ -47,7 +49,7 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 	protected boolean removeOtherChains;
 	protected boolean removeOtherMolecules;
 	protected JMolReportManager<R, T> reportManager;
-	protected static List<Double> numPDBStructuresList = new ArrayList<Double>();
+	protected static TDoubleArrayList numPDBStructuresList = new TDoubleArrayList();
 	protected final Map<String, T> reportsByPDBPositionAndChainAndRemovals = new THashMap<String, T>();
 	private DigestionConfiguration fastaDigestionConfiguration;
 	private boolean oneModelPerProtein;
@@ -76,7 +78,7 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 		this.uplr = uplr;
 
 		this.atomTypeMap = new HashMap<Character, List<AtomType>>();
-		List<AtomType> list = new ArrayList<AtomType>();
+		final List<AtomType> list = new ArrayList<AtomType>();
 		list.add(atomType);
 		atomTypeMap.put(aa, list);
 		this.removeOtherChains = removeOtherChains;
@@ -110,16 +112,16 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 	}
 
 	protected Map<String, R> getReportFromProteins(Collection<Protein> proteins) {
-		Set<String> uniprotAccs = new THashSet<String>();
-		for (Protein protein : proteins) {
+		final Set<String> uniprotAccs = new THashSet<String>();
+		for (final Protein protein : proteins) {
 			final Pair<String, String> acc = FastaParser.getACC(protein.getAcc());
 			if (acc != null && acc.getSecondElement().equals("UNIPROT")) {
 				uniprotAccs.add(acc.getFirstelement());
 			}
 		}
-		Map<String, R> ret = new THashMap<String, R>();
+		final Map<String, R> ret = new THashMap<String, R>();
 		final Map<String, Entry> annotatedProteins = uplr.getAnnotatedProteins(getUniprotVersion(), uniprotAccs);
-		for (Protein protein : proteins) {
+		for (final Protein protein : proteins) {
 			if (annotatedProteins.containsKey(protein.getAcc())) {
 				final R surfaceAccesibilityFromProtein = getReportFromProtein(protein, null,
 						annotatedProteins.get(protein.getAcc()));
@@ -139,9 +141,9 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 
 		pdbParserManager.clearParsers();
 
-		R proteinReport = createProteinReportObject(pdbID, null);
+		final R proteinReport = createProteinReportObject(pdbID, null);
 		InputParameters inputParameters = null;
-		PDBParser parser = pdbParserManager.getPDBParserByPDBID(pdbID, isParseCoordinates());
+		final PDBParser parser = pdbParserManager.getPDBParserByPDBID(pdbID, isParseCoordinates());
 		if (parser != null) {
 			if (chainID != null) {
 				inputParameters = new InputParameters(atomTypeMap, pdbID, chainID, removeOtherChains,
@@ -155,10 +157,10 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 
 			log.info("Using PDB model " + pdbID);
 
-			Map<String, T> siteReports = getSiteReportFromParameters(parser, inputParameters);
+			final Map<String, T> siteReports = getSiteReportFromParameters(parser, inputParameters);
 
 			if (siteReports != null) {
-				for (String key : siteReports.keySet()) {
+				for (final String key : siteReports.keySet()) {
 					proteinReport.addReport(siteReports.get(key));
 				}
 
@@ -192,19 +194,19 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 	}
 
 	public List<File> getJPGImages(R proteinReport) {
-		List<File> files = new ArrayList<File>();
+		final List<File> files = new ArrayList<File>();
 
 		// do this per each individual pdb
 		final Map<String, Set<T>> reportsByPDBID = proteinReport.getReportsByPDBID();
-		for (String pdbID : reportsByPDBID.keySet()) {
+		for (final String pdbID : reportsByPDBID.keySet()) {
 
 			final JMolScript selectAndAddLabels = JMolCommandsUtil.getSelectAndAddLabels(proteinReport, pdbID);
 			final PDBParser pdbParser = pdbParserManager.getPDBParserByPDBID(pdbID, isParseCoordinates());
 			pdbParser.executeCommands(selectAndAddLabels);
 
-			File file = new File(pdbParser.getFileFolder().getAbsolutePath() + File.separator
+			final File file = new File(pdbParser.getFileFolder().getAbsolutePath() + File.separator
 					+ proteinReport.getUniprotACC() + "_" + pdbID + ".png");
-			JMolScript saveImageCommand = new JMolScript(
+			final JMolScript saveImageCommand = new JMolScript(
 					"write image 600 600 PNG 2 \"" + file.getAbsolutePath().replace(File.separator, "/") + "\"");
 			// String saveImageCommand = "x = write(\"PNGJ\");";
 			pdbParser.executeCommands(saveImageCommand);
@@ -233,11 +235,11 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 	 * @return a List of Chain. Sorted by resolution.
 	 */
 	protected List<Chain> getPDBChainListSortedByResolution(Entry entry, String pdbID, int positionInUniprot) {
-		List<Chain> ret = new ArrayList<Chain>();
+		final List<Chain> ret = new ArrayList<Chain>();
 		double numPDBStructures = 0;
 		final List<DbReferenceType> dbReferences = entry.getDbReference();
 		if (dbReferences != null) {
-			for (DbReferenceType dbReferenceType : dbReferences) {
+			for (final DbReferenceType dbReferenceType : dbReferences) {
 				if (dbReferenceType.getType().equals("PDB")) {
 					numPDBStructures++;
 					// see if this crystal structure include the position we are
@@ -251,20 +253,20 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 						}
 						try {
 							resolution = Float.valueOf(resolutionString);
-						} catch (NumberFormatException e) {
+						} catch (final NumberFormatException e) {
 							if (resolutionString.endsWith(" A")) {
 								resolutionString = resolutionString.split(" ")[0];
 								try {
 									resolution = Float.valueOf(resolutionString);
-								} catch (NumberFormatException e2) {
+								} catch (final NumberFormatException e2) {
 
 								}
 							}
 						}
 					}
-					String chainsString = PDBUtil.getPropertyValueFromDbReferenceType(dbReferenceType, "chains");
-					Set<Chain> chains = getChainsFromChainString(chainsString, dbReferenceType, resolution);
-					for (Chain chain : chains) {
+					final String chainsString = PDBUtil.getPropertyValueFromDbReferenceType(dbReferenceType, "chains");
+					final Set<Chain> chains = getChainsFromChainString(chainsString, dbReferenceType, resolution);
+					for (final Chain chain : chains) {
 						// if pdbID is provided, only take that model
 						if (pdbID != null && !chain.getPdbID().equals(pdbID)) {
 							continue;
@@ -280,11 +282,11 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 		numPDBStructuresList.add(numPDBStructures);
 		if (!ret.isEmpty()) {
 			// sort by resolution
-			Comparator<Chain> comparator = new Comparator<Chain>() {
+			final Comparator<Chain> comparator = new Comparator<Chain>() {
 				@Override
 				public int compare(Chain o1, Chain o2) {
-					Float res1 = o1.getResolution() != null ? o1.getResolution() : -1;
-					Float res2 = o2.getResolution() != null ? o2.getResolution() : -1;
+					final Float res1 = o1.getResolution() != null ? o1.getResolution() : -1;
+					final Float res2 = o2.getResolution() != null ? o2.getResolution() : -1;
 					return Float.compare(res2, res1);
 				}
 			};
@@ -299,12 +301,12 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 	}
 
 	public static String getStatistics() {
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		sb.append(numPDBStructuresList.size() + " proteins analyzed\n");
-		double mean = Maths.mean(numPDBStructuresList.toArray(new Double[0]));
-		double stddev = Maths.stddev(numPDBStructuresList.toArray(new Double[0]));
-		double sum = Maths.sum(numPDBStructuresList.toArray(new Double[0]));
-		double max = Maths.max(numPDBStructuresList.toArray(new Double[0]));
+		final double mean = Maths.mean(numPDBStructuresList);
+		final double stddev = Maths.stddev(numPDBStructuresList);
+		final double sum = numPDBStructuresList.sum();
+		final double max = numPDBStructuresList.max();
 		sb.append(sum + " total PDB structures matched\n" + mean + "(" + stddev
 				+ ") structures matched per protein in average (stdev). Max=" + max);
 		return sb.toString();
@@ -316,10 +318,10 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 
 	private Set<Chain> getChainsFromChainString(String chainsString, DbReferenceType dbReferenceType,
 			Float resolution) {
-		Set<Chain> ret = new THashSet<Chain>();
+		final Set<Chain> ret = new THashSet<Chain>();
 		if (chainsString.contains(",")) {
 			final String[] split = chainsString.split(",");
-			for (String individualChaingString : split) {
+			for (final String individualChaingString : split) {
 				ret.addAll(getChainsFromIndividualChainString(individualChaingString, dbReferenceType, resolution));
 			}
 		} else {
@@ -330,19 +332,19 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 
 	private Set<Chain> getChainsFromIndividualChainString(String individualChaingString,
 			DbReferenceType dbReferenceType, Float resolution) {
-		Set<Chain> ret = new THashSet<Chain>();
+		final Set<Chain> ret = new THashSet<Chain>();
 		if (individualChaingString.contains("=")) {
 			final String[] split = individualChaingString.split("=");
-			String chainIdString = split[0];
-			String positionsString = split[1];
+			final String chainIdString = split[0];
+			final String positionsString = split[1];
 			if (chainIdString.contains("/")) {
 				final String[] split2 = chainIdString.split("/");
-				for (String individualChainId : split2) {
-					String text = individualChainId + "=" + positionsString;
+				for (final String individualChainId : split2) {
+					final String text = individualChainId + "=" + positionsString;
 					ret.add(new Chain(dbReferenceType.getId(), text, resolution));
 				}
 			} else {
-				String text = chainIdString + "=" + positionsString;
+				final String text = chainIdString + "=" + positionsString;
 				ret.add(new Chain(dbReferenceType.getId(), text, resolution));
 			}
 		}
@@ -378,7 +380,7 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 
 	public Map<String, T> getSiteReportFromParameters(PDBParser parser, InputParameters inputParameters) {
 		if (inputParameters.getUniprotACC() != null) {
-			Map<String, T> ret = new THashMap<String, T>();
+			final Map<String, T> ret = new THashMap<String, T>();
 			final T report = getSiteReportMappedToUniprot(parser, inputParameters);
 			if (report != null) {
 				ret.put(report.getAtom().getPositionInPDB() + report.getAtom().getChainID(), report);
@@ -392,14 +394,14 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 	private Map<String, T> getSiteReportForPDBModel(PDBParser parser, InputParameters inputParameters) {
 		// get the proteinSequence in PDB
 		Chain chain = inputParameters.getChain();
-		List<DBRef> dbRefs = new ArrayList<DBRef>();
+		final List<DBRef> dbRefs = new ArrayList<DBRef>();
 		if (chain != null) {
-			DBRef dbRef = PDBUtil.getDBRef(parser, chain.getIdentifier());
+			final DBRef dbRef = PDBUtil.getDBRef(parser, chain.getIdentifier());
 			dbRefs.add(dbRef);
 		} else {
 			dbRefs.addAll(parser.getDBRefs());
 		}
-		for (DBRef dbRef : dbRefs) {
+		for (final DBRef dbRef : dbRefs) {
 			if (dbRef != null && dbRef.getChainID() != null) {
 				chain = new Chain(parser.getPdbID(), dbRef.getChainID() + "=0-0", -1.0f);
 				final String pdbProteinSeq = parser.getSequence(dbRef);
@@ -407,9 +409,9 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 					log.warn("Protein sequence for chain " + dbRef.getChainID() + " was not obtained");
 					continue;
 				}
-				for (Character aa : inputParameters.getAtomTypeMap().keySet()) {
-					final List<Integer> aaPositionsInPDB = StringUtils.allPositionsOf(pdbProteinSeq, aa);
-					for (Integer positionInPDB : aaPositionsInPDB) {
+				for (final Character aa : inputParameters.getAtomTypeMap().keySet()) {
+					final TIntArrayList aaPositionsInPDB = StringUtils.allPositionsOf(pdbProteinSeq, aa);
+					for (final int positionInPDB : aaPositionsInPDB.toArray()) {
 
 						final String key = positionInPDB + chain.getIdentifier() + inputParameters.isRemoveOtherChains()
 								+ inputParameters.isRemoveOtherMolecules();
@@ -423,15 +425,15 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 						}
 						// get the appropriate atom in the chain of PDB
 
-						List<AtomType> atomTypeList = inputParameters.getAtomTypeMap().get(aa);
-						for (AtomType atomType : atomTypeList) {
-							Atom3D atom = parser.getAtom(chain.getIdentifier(), aa, atomType, positionInPDB);
+						final List<AtomType> atomTypeList = inputParameters.getAtomTypeMap().get(aa);
+						for (final AtomType atomType : atomTypeList) {
+							final Atom3D atom = parser.getAtom(chain.getIdentifier(), aa, atomType, positionInPDB);
 							if (atom == null) {
 								log.warn("Atom is not found in chainID: '" + chain.getIdentifier() + "' in aa: '" + aa
 										+ "' atomType: '" + atomType + "' position in PDB: '" + positionInPDB + "'");
 								continue;
 							}
-							T report = calculateReport(parser, inputParameters, atom, positionInPDB,
+							final T report = calculateReport(parser, inputParameters, atom, positionInPDB,
 									chain.getResolution());
 							if (report != null) {
 								reportsByPDBPositionAndChainAndRemovals.put(key, report);
@@ -453,7 +455,7 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 	private T getSiteReportMappedToUniprot(PDBParser parser, InputParameters inputParameters) {
 		// get the proteinSequence in PDB
 		final Chain chain = inputParameters.getChain();
-		DBRef dbRef = PDBUtil.getDBRef(parser, chain.getIdentifier());
+		final DBRef dbRef = PDBUtil.getDBRef(parser, chain.getIdentifier());
 		if (dbRef != null && dbRef.getChainID() != null) {
 			final String pdbProteinSeq = parser.getSequence(dbRef);
 			if ("".equals(pdbProteinSeq)) {
@@ -474,17 +476,18 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 					return reportsByPDBPositionAndChainAndRemovals.get(key);
 				}
 				// get the appropriate atom in the chain of PDB
-				for (Character aa : inputParameters.getAtomTypeMap().keySet()) {
-					List<AtomType> atomTypeList = inputParameters.getAtomTypeMap().get(aa);
-					for (AtomType atomType : atomTypeList) {
+				for (final Character aa : inputParameters.getAtomTypeMap().keySet()) {
+					final List<AtomType> atomTypeList = inputParameters.getAtomTypeMap().get(aa);
+					for (final AtomType atomType : atomTypeList) {
 
-						Atom3D atom = parser.getAtom(chain.getIdentifier(), aa, atomType, positionInPDB);
+						final Atom3D atom = parser.getAtom(chain.getIdentifier(), aa, atomType, positionInPDB);
 						if (atom == null) {
 							log.debug("Atom is not found with chainID: '" + chain.getIdentifier() + "' in aa: '" + aa
 									+ "' atomType: '" + atomType + "' position in PDB: '" + positionInPDB + "'");
 							return null;
 						}
-						T report = calculateReport(parser, inputParameters, atom, positionInPDB, chain.getResolution());
+						final T report = calculateReport(parser, inputParameters, atom, positionInPDB,
+								chain.getResolution());
 						if (report != null) {
 							reportsByPDBPositionAndChainAndRemovals.put(key, report);
 							return report;
@@ -504,7 +507,7 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 	public R getReportFromProtein(String proteinAcc, String pdbID, Entry entry) {
 		if (proteinAcc != null) {
 			if (entry == null) {
-				Map<String, Entry> annotatedProtein = uplr.getAnnotatedProtein(uniprotVersion, proteinAcc);
+				final Map<String, Entry> annotatedProtein = uplr.getAnnotatedProtein(uniprotVersion, proteinAcc);
 				if (annotatedProtein.containsKey(proteinAcc)) {
 					entry = annotatedProtein.get(proteinAcc);
 				}
@@ -514,7 +517,7 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 				return null;
 			}
 			if (fastaDigestionConfiguration != null) {
-				List<String> peptides = fastaDigestionConfiguration.digestProtein(uniprotProteinSeq);
+				final List<String> peptides = fastaDigestionConfiguration.digestProtein(uniprotProteinSeq);
 				return getReportFromProtein(proteinAcc, pdbID, peptides, entry);
 			}
 		} else {
@@ -524,8 +527,8 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 	}
 
 	public R getReportFromProtein(Protein protein, String pdbID, Entry entry) {
-		Set<String> peptideSequences = new HashSet<String>();
-		for (Peptide peptide : protein.getPeptides()) {
+		final Set<String> peptideSequences = new HashSet<String>();
+		for (final Peptide peptide : protein.getPeptides()) {
 			peptideSequences.add(peptide.getSequence());
 		}
 		return getReportFromProtein(protein.getAcc(), pdbID, peptideSequences, entry);
@@ -533,7 +536,7 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 
 	public R getReportFromProtein(String proteinAcc, String pdbID, Collection<String> peptides, Entry entry) {
 		if (entry == null) {
-			Map<String, Entry> annotatedProtein = uplr.getAnnotatedProtein(uniprotVersion, proteinAcc);
+			final Map<String, Entry> annotatedProtein = uplr.getAnnotatedProtein(uniprotVersion, proteinAcc);
 			if (annotatedProtein.containsKey(proteinAcc)) {
 				entry = annotatedProtein.get(proteinAcc);
 			}
@@ -544,23 +547,23 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 		}
 		pdbParserManager.clearParsers();
 
-		R proteinReport = createProteinReportObject(proteinAcc, uniprotProteinSeq);
-		TIntHashSet positionsInUniprotProteinProcessed = new TIntHashSet();
-		Map<String, List<InputParameters>> parametersByPDBID = new THashMap<String, List<InputParameters>>();
+		final R proteinReport = createProteinReportObject(proteinAcc, uniprotProteinSeq);
+		final TIntHashSet positionsInUniprotProteinProcessed = new TIntHashSet();
+		final Map<String, List<InputParameters>> parametersByPDBID = new THashMap<String, List<InputParameters>>();
 		int numCalculationsToDo = 0;
-		for (String uniprotPeptideSequence : peptides) {
+		for (final String uniprotPeptideSequence : peptides) {
 
-			List<Integer> peptidePositionInUniprots = StringUtils.allPositionsOf(uniprotProteinSeq,
+			final TIntArrayList peptidePositionInUniprots = StringUtils.allPositionsOf(uniprotProteinSeq,
 					uniprotPeptideSequence);
 			if (peptidePositionInUniprots.size() > 1) {
 				log.debug(uniprotPeptideSequence + "_ is present " + peptidePositionInUniprots.size()
 						+ " times in protein " + proteinAcc);
 			}
-			for (Integer peptidePositionInUniprot : peptidePositionInUniprots) {
+			for (final int peptidePositionInUniprot : peptidePositionInUniprots.toArray()) {
 				for (int positionInPeptide = 0; positionInPeptide < uniprotPeptideSequence
 						.length(); positionInPeptide++) {
 					// iterate over aas
-					for (Character aa : atomTypeMap.keySet()) {
+					for (final Character aa : atomTypeMap.keySet()) {
 						if (uniprotPeptideSequence.charAt(positionInPeptide) == aa) {
 							final int positionInUniprotProtein = peptidePositionInUniprot + positionInPeptide;
 							if (!positionsInUniprotProteinProcessed.contains(positionInUniprotProtein)) {
@@ -578,21 +581,21 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 									log.debug("No PDB structures for position " + positionInUniprotProtein + " protein "
 											+ proteinAcc);
 								}
-								for (Chain chain : chains) {
-									PDBParser parser = pdbParserManager.getPDBParserByPDBID(chain.getPdbID(),
+								for (final Chain chain : chains) {
+									final PDBParser parser = pdbParserManager.getPDBParserByPDBID(chain.getPdbID(),
 											isParseCoordinates());
 									if (parser != null) {
 										if (!parser.containsUniprotReference(proteinAcc)) {
 											continue;
 										}
 
-										InputParameters inputParameters = new InputParameters(atomTypeMap,
+										final InputParameters inputParameters = new InputParameters(atomTypeMap,
 												positionInUniprotProtein, chain, uniprotPeptideSequence,
 												positionInPeptide, proteinAcc, removeOtherChains, removeOtherMolecules);
-										R proteinReportByProtein = reportManager
+										final R proteinReportByProtein = reportManager
 												.getReportByKey(inputParameters.getReportKey());
 										if (proteinReportByProtein != null) {
-											for (T report : proteinReportByProtein.getReports()) {
+											for (final T report : proteinReportByProtein.getReports()) {
 												proteinReport.addReport(report);
 											}
 
@@ -602,7 +605,7 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 											if (parametersByPDBID.containsKey(inputParameters.getPdbID())) {
 												parametersByPDBID.get(inputParameters.getPdbID()).add(inputParameters);
 											} else {
-												List<InputParameters> list = new ArrayList<InputParameters>();
+												final List<InputParameters> list = new ArrayList<InputParameters>();
 												list.add(inputParameters);
 												parametersByPDBID.put(inputParameters.getPdbID(), list);
 											}
@@ -625,21 +628,21 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 		if (numCalculationsToDo > 0) {
 			log.info(numCalculationsToDo + " calculations to do for " + proteinAcc);
 		}
-		for (String pdbID2 : parametersByPDBID.keySet()) {
-			PDBParser parser = pdbParserManager.getPDBParserByPDBID(pdbID2, isParseCoordinates());
+		for (final String pdbID2 : parametersByPDBID.keySet()) {
+			final PDBParser parser = pdbParserManager.getPDBParserByPDBID(pdbID2, isParseCoordinates());
 			log.info("Using PDB model " + pdbID2 + " for protein " + proteinAcc);
 			if (parser != null) {
 				if (!parser.containsUniprotReference(proteinAcc)) {
 					continue;
 				}
-				List<InputParameters> list = parametersByPDBID.get(pdbID2);
+				final List<InputParameters> list = parametersByPDBID.get(pdbID2);
 				sortByUniprotPosition(list);
-				for (InputParameters inputParameters : list) {
+				for (final InputParameters inputParameters : list) {
 					log.debug("Using PDB model " + pdbID2 + " for protein " + proteinAcc + " position "
 							+ inputParameters.getPositionInUniprotProtein());
-					Map<String, T> siteReports = getSiteReportFromParameters(parser, inputParameters);
+					final Map<String, T> siteReports = getSiteReportFromParameters(parser, inputParameters);
 					if (siteReports != null) {
-						for (String key : siteReports.keySet()) {
+						for (final String key : siteReports.keySet()) {
 							proteinReport.addReport(siteReports.get(key));
 						}
 

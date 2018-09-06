@@ -177,8 +177,8 @@ public class SurfaceAccesibilityTest {
 					final String peptideSequence = psm.getSequence();
 
 					peptideSequences.add(peptideSequence);
-					if (!psmIds.contains(psm.getPSMIdentifier())) {
-						psmIds.add(psm.getPSMIdentifier());
+					if (!psmIds.contains(psm.getIdentifier())) {
+						psmIds.add(psm.getIdentifier());
 						if (!peptideSequence.contains(String.valueOf(aa))) {
 							psmsNoAA++;
 							continue;
@@ -207,7 +207,7 @@ public class SurfaceAccesibilityTest {
 								peptideSequencesValid.add(peptideSequence);
 								final SurfaceProteinReport surfaceAccesibilityProteinReport = surfaceAccesibilityFromProteins
 										.get(acc);
-								ProteinReportWriter.printReportForPsm(fw, ratio, psm.getPSMIdentifier(),
+								ProteinReportWriter.printReportForPsm(fw, ratio, psm.getIdentifier(),
 										peptideSequence, surfaceAccesibilityProteinReport, aa,
 										printOnlyTheMostAccessibleSite);
 								uniquePositionsValid
@@ -288,8 +288,8 @@ public class SurfaceAccesibilityTest {
 					final String peptideSequence = psm.getSequence();
 
 					peptideSequences.add(peptideSequence);
-					if (!psmIds.contains(psm.getPSMIdentifier())) {
-						psmIds.add(psm.getPSMIdentifier());
+					if (!psmIds.contains(psm.getIdentifier())) {
+						psmIds.add(psm.getIdentifier());
 						if (!peptideSequence.contains(String.valueOf(aa))) {
 							psmsNoAA++;
 							continue;
@@ -318,7 +318,7 @@ public class SurfaceAccesibilityTest {
 								peptideSequencesValid.add(peptideSequence);
 								final SurfaceProteinReport surfaceAccesibilityProteinReport = surfaceAccesibilityFromProteins
 										.get(acc);
-								ProteinReportWriter.printReportForPsm(fw, ratio, psm.getPSMIdentifier(),
+								ProteinReportWriter.printReportForPsm(fw, ratio, psm.getIdentifier(),
 										peptideSequence, surfaceAccesibilityProteinReport, aa,
 										printOnlyTheMostAccessibleSite);
 								uniquePositionsValid
@@ -642,8 +642,8 @@ public class SurfaceAccesibilityTest {
 					final String peptideSequence = psm.getSequence();
 
 					peptideSequences.add(peptideSequence);
-					if (!psmIds.contains(psm.getPSMIdentifier())) {
-						psmIds.add(psm.getPSMIdentifier());
+					if (!psmIds.contains(psm.getIdentifier())) {
+						psmIds.add(psm.getIdentifier());
 						if (!peptideSequence.contains(String.valueOf(aa))) {
 							psmsNoAA++;
 							continue;
@@ -672,7 +672,7 @@ public class SurfaceAccesibilityTest {
 								peptideSequencesValid.add(peptideSequence);
 								final SurfaceProteinReport surfaceAccesibilityProteinReport = surfaceAccesibilityFromProteins
 										.get(acc);
-								ProteinReportWriter.printReportForPsm(fw, ratio, psm.getPSMIdentifier(),
+								ProteinReportWriter.printReportForPsm(fw, ratio, psm.getIdentifier(),
 										peptideSequence, surfaceAccesibilityProteinReport, aa, true);
 								final List<String> uniquePositionsInProteinKeys = surfaceAccesibilityProteinReport
 										.getUniquePositionsInProteinKeys();
@@ -753,8 +753,8 @@ public class SurfaceAccesibilityTest {
 				for (PSM psm : protein.getPSMs()) {
 					if (psm.getRatios() != null && !psm.getRatios().isEmpty()) {
 						Peptide surfacePeptide = null;
-						if (surfacePeptideMap.containsKey(psm.getPSMIdentifier())) {
-							surfacePeptide = surfacePeptideMap.get(psm.getPSMIdentifier());
+						if (surfacePeptideMap.containsKey(psm.getIdentifier())) {
+							surfacePeptide = surfacePeptideMap.get(psm.getIdentifier());
 						} else {
 							surfacePeptide = new Peptide(psm.getSequence(),
 									psm.getRatios().iterator().next().getValue());

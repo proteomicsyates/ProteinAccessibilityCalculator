@@ -15,6 +15,7 @@ import com.compomics.dbtoolkit.io.implementations.FASTADBLoader;
 import com.compomics.dbtoolkit.io.interfaces.Filter;
 
 import edu.scripps.yates.dbindex.DBIndexInterface;
+import edu.scripps.yates.dbindex.DBIndexStoreException;
 import edu.scripps.yates.dbindex.IndexedProtein;
 import edu.scripps.yates.dbindex.util.FastaDigestionConfiguration;
 import edu.scripps.yates.dbindex.util.PeptideNotFoundInDBIndexException;
@@ -38,9 +39,9 @@ public class InputFileReader {
 		String ratioString = null;
 		int row = 0;
 		try {
-			Map<String, Protein> ret = new THashMap<String, Protein>();
+			final Map<String, Protein> ret = new THashMap<String, Protein>();
 
-			List<String> peptideSequences = FileUtils.readColumnFromTextFile(inputFile, separator,
+			final List<String> peptideSequences = FileUtils.readColumnFromTextFile(inputFile, separator,
 					peptideSequenceColumnIndex, skipHeader);
 			List<String> peptideRatios = null;
 			if (peptideRatioColumnIndex > -1) {
@@ -49,12 +50,12 @@ public class InputFileReader {
 			}
 
 			if (proteinAccessionColumnIndex > -1 && fastaDigestion == null) {
-				List<String> proteinAccs = FileUtils.readColumnFromTextFile(inputFile, separator,
+				final List<String> proteinAccs = FileUtils.readColumnFromTextFile(inputFile, separator,
 						proteinAccessionColumnIndex, skipHeader);
 
 				for (row = 0; row < peptideSequences.size(); row++) {
-					String acc = proteinAccs.get(row);
-					String sequence = peptideSequences.get(row);
+					final String acc = proteinAccs.get(row);
+					final String sequence = peptideSequences.get(row);
 					Double ratio = null;
 					if (peptideRatios != null) {
 						ratioString = peptideRatios.get(row);
@@ -74,16 +75,16 @@ public class InputFileReader {
 						numProteins++;
 						ret.put(acc, protein);
 					}
-					Peptide peptide = new Peptide(sequence, ratio);
+					final Peptide peptide = new Peptide(sequence, ratio);
 					numPeptides++;
 					protein.getPeptides().add(peptide);
 				}
 			} else {
 				if (fastaDigestion.getEnzymeArray() != null) {
-					DBIndexInterface dbindex = FastaDigestionConfiguration.getFastaDBIndex(fastaDigestion);
+					final DBIndexInterface dbindex = FastaDigestionConfiguration.getFastaDBIndex(fastaDigestion);
 					for (row = 0; row < peptideSequences.size(); row++) {
 
-						String sequence = peptideSequences.get(row);
+						final String sequence = peptideSequences.get(row);
 						Double ratio = null;
 						if (peptideRatios != null) {
 							ratioString = peptideRatios.get(row);
@@ -96,7 +97,7 @@ public class InputFileReader {
 							}
 						}
 						// remove Ptms or pre and post peptide characteres
-						String cleanSequence = FastaParser.cleanSequence(sequence);
+						final String cleanSequence = FastaParser.cleanSequence(sequence);
 						final Set<IndexedProtein> proteins = dbindex.getProteins(cleanSequence);
 						if (proteins == null || proteins.isEmpty()) {
 							log.warn("Peptide '" + sequence + "' (row " + row
@@ -108,8 +109,8 @@ public class InputFileReader {
 							}
 							continue;
 						}
-						for (IndexedProtein indexedProtein : proteins) {
-							String acc = indexedProtein.getAccession();
+						for (final IndexedProtein indexedProtein : proteins) {
+							final String acc = indexedProtein.getAccession();
 							Protein protein = null;
 							if (ret.containsKey(acc)) {
 								protein = ret.get(acc);
@@ -118,7 +119,7 @@ public class InputFileReader {
 								numProteins++;
 								ret.put(acc, protein);
 							}
-							Peptide peptide = new Peptide(sequence, ratio);
+							final Peptide peptide = new Peptide(sequence, ratio);
 							numPeptides++;
 							protein.getPeptides().add(peptide);
 						}
@@ -127,19 +128,19 @@ public class InputFileReader {
 				} else {
 					log.info(
 							"No digestion enzyme provided. Reading the entire Fasta to find peptide to proteins relationships");
-					File fastaFile = fastaDigestion.getFasta();
-					Map<String, String> proteinsByProteinSequences = loadFastaInMemory(fastaFile);
-					List<String> proteinSequences = new ArrayList<String>();
+					final File fastaFile = fastaDigestion.getFasta();
+					final Map<String, String> proteinsByProteinSequences = loadFastaInMemory(fastaFile);
+					final List<String> proteinSequences = new ArrayList<String>();
 					proteinSequences.addAll(proteinsByProteinSequences.keySet());
-					ProgressCounter counter = new ProgressCounter(peptideSequences.size(),
+					final ProgressCounter counter = new ProgressCounter(peptideSequences.size(),
 							ProgressPrintingType.PERCENTAGE_STEPS, 0, true);
 					for (row = 0; row < peptideSequences.size(); row++) {
 						counter.increment();
-						String printIfNecessary = counter.printIfNecessary();
+						final String printIfNecessary = counter.printIfNecessary();
 						if (!"".contentEquals(printIfNecessary)) {
 							log.info(printIfNecessary + " peptides processed");
 						}
-						String sequence = peptideSequences.get(row);
+						final String sequence = peptideSequences.get(row);
 						Double ratio = null;
 						if (peptideRatios != null) {
 							ratioString = peptideRatios.get(row);
@@ -152,9 +153,9 @@ public class InputFileReader {
 							}
 						}
 						// remove Ptms or pre and post peptide characteres
-						Set<String> proteinAccs = new HashSet<String>();
-						String cleanSequence = FastaParser.cleanSequence(sequence);
-						for (String proteinSequence : proteinSequences) {
+						final Set<String> proteinAccs = new HashSet<String>();
+						final String cleanSequence = FastaParser.cleanSequence(sequence);
+						for (final String proteinSequence : proteinSequences) {
 							if (proteinSequence.contains(cleanSequence)) {
 								proteinAccs.add(proteinsByProteinSequences.get(proteinSequence));
 							}
@@ -168,7 +169,7 @@ public class InputFileReader {
 							}
 							continue;
 						}
-						for (String acc : proteinAccs) {
+						for (final String acc : proteinAccs) {
 							Protein protein = null;
 							if (ret.containsKey(acc)) {
 								protein = ret.get(acc);
@@ -177,7 +178,7 @@ public class InputFileReader {
 								numProteins++;
 								ret.put(acc, protein);
 							}
-							Peptide peptide = new Peptide(sequence, ratio);
+							final Peptide peptide = new Peptide(sequence, ratio);
 							numPeptides++;
 							protein.getPeptides().add(peptide);
 						}
@@ -185,12 +186,16 @@ public class InputFileReader {
 				}
 			}
 			return ret;
-		} catch (NumberFormatException e) {
+		} catch (final NumberFormatException e) {
 			e.printStackTrace();
 			log.error("Error parsing some ratios. A not valid entry has been detected: '" + ratioString + "' at row "
 					+ row);
 			System.exit(-1);
-		} catch (IOException e) {
+		} catch (final IOException e) {
+			e.printStackTrace();
+			log.error("Error reading some file: " + e.getMessage());
+			System.exit(-1);
+		} catch (final DBIndexStoreException e) {
 			e.printStackTrace();
 			log.error("Error reading some file: " + e.getMessage());
 			System.exit(-1);
@@ -210,15 +215,15 @@ public class InputFileReader {
 	 * @throws IOException
 	 */
 	private static Map<String, String> loadFastaInMemory(File fastaFile) throws IOException {
-		long t1 = System.currentTimeMillis();
+		final long t1 = System.currentTimeMillis();
 		log.info("Loading entire Fasta file in memory...");
-		FASTADBLoader fastadbLoader = new FASTADBLoader();
+		final FASTADBLoader fastadbLoader = new FASTADBLoader();
 		if (!fastadbLoader.canReadFile(fastaFile)) {
 			throw new IllegalArgumentException(fastaFile.getAbsolutePath() + " cannot be read");
 		}
 		fastadbLoader.load(fastaFile.getAbsolutePath());
-		Map<String, String> map = new HashMap<String, String>();
-		Filter decoyFilter = new Filter() {
+		final Map<String, String> map = new HashMap<String, String>();
+		final Filter decoyFilter = new Filter() {
 
 			@Override
 			public boolean passesFilter(HashMap aEntry) {
@@ -235,16 +240,17 @@ public class InputFileReader {
 			}
 		};
 		String protein = null;
-		ProgressCounter counter = new ProgressCounter(Long.valueOf(fastadbLoader.countNumberOfEntries()).intValue(),
-				ProgressPrintingType.PERCENTAGE_STEPS, 0, true);
+		final ProgressCounter counter = new ProgressCounter(
+				Long.valueOf(fastadbLoader.countNumberOfEntries()).intValue(), ProgressPrintingType.PERCENTAGE_STEPS, 0,
+				true);
 		while ((protein = fastadbLoader.nextFilteredRawEntry(decoyFilter)) != null) {
 			counter.increment();
-			String printIfNecessary = counter.printIfNecessary();
+			final String printIfNecessary = counter.printIfNecessary();
 			if (!"".equals(printIfNecessary)) {
 				log.info(printIfNecessary + " entries loaded");
 			}
-			String acc = FastaParser.getACC(protein.split("\n")[0]).getFirstelement();
-			String sequence = protein.substring(protein.indexOf("\n") + 1);
+			final String acc = FastaParser.getACC(protein.split("\n")[0]).getFirstelement();
+			final String sequence = protein.substring(protein.indexOf("\n") + 1);
 			map.put(sequence, acc);
 		}
 		log.info("Fasta file loaded in memory in "

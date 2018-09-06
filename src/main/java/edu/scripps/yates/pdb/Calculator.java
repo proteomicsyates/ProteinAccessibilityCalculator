@@ -32,6 +32,8 @@ import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.maths.Maths;
 import edu.scripps.yates.utilities.strings.StringUtils;
 import edu.scripps.yates.utilities.util.Pair;
+import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
 import gnu.trove.set.hash.TIntHashSet;
@@ -47,7 +49,7 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 	protected boolean removeOtherChains;
 	protected boolean removeOtherMolecules;
 	protected JMolReportManager<R, T> reportManager;
-	protected static List<Double> numPDBStructuresList = new ArrayList<Double>();
+	protected static TDoubleArrayList numPDBStructuresList = new TDoubleArrayList();
 	protected final Map<String, T> reportsByPDBPositionAndChainAndRemovals = new THashMap<String, T>();
 	private DigestionConfiguration fastaDigestionConfiguration;
 	private boolean oneModelPerProtein;
@@ -301,10 +303,10 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 	public static String getStatistics() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(numPDBStructuresList.size() + " proteins analyzed\n");
-		double mean = Maths.mean(numPDBStructuresList.toArray(new Double[0]));
-		double stddev = Maths.stddev(numPDBStructuresList.toArray(new Double[0]));
-		double sum = Maths.sum(numPDBStructuresList.toArray(new Double[0]));
-		double max = Maths.max(numPDBStructuresList.toArray(new Double[0]));
+		double mean = Maths.mean(numPDBStructuresList);
+		double stddev = Maths.stddev(numPDBStructuresList);
+		double sum = numPDBStructuresList.sum();
+		double max = numPDBStructuresList.max();
 		sb.append(sum + " total PDB structures matched\n" + mean + "(" + stddev
 				+ ") structures matched per protein in average (stdev). Max=" + max);
 		return sb.toString();
@@ -408,8 +410,8 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 					continue;
 				}
 				for (Character aa : inputParameters.getAtomTypeMap().keySet()) {
-					final List<Integer> aaPositionsInPDB = StringUtils.allPositionsOf(pdbProteinSeq, aa);
-					for (Integer positionInPDB : aaPositionsInPDB) {
+					final TIntArrayList aaPositionsInPDB = StringUtils.allPositionsOf(pdbProteinSeq, aa);
+					for (int positionInPDB : aaPositionsInPDB.toArray()) {
 
 						final String key = positionInPDB + chain.getIdentifier() + inputParameters.isRemoveOtherChains()
 								+ inputParameters.isRemoveOtherMolecules();
@@ -550,13 +552,13 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 		int numCalculationsToDo = 0;
 		for (String uniprotPeptideSequence : peptides) {
 
-			List<Integer> peptidePositionInUniprots = StringUtils.allPositionsOf(uniprotProteinSeq,
+			TIntArrayList peptidePositionInUniprots = StringUtils.allPositionsOf(uniprotProteinSeq,
 					uniprotPeptideSequence);
 			if (peptidePositionInUniprots.size() > 1) {
 				log.debug(uniprotPeptideSequence + "_ is present " + peptidePositionInUniprots.size()
 						+ " times in protein " + proteinAcc);
 			}
-			for (Integer peptidePositionInUniprot : peptidePositionInUniprots) {
+			for (int peptidePositionInUniprot : peptidePositionInUniprots.toArray()) {
 				for (int positionInPeptide = 0; positionInPeptide < uniprotPeptideSequence
 						.length(); positionInPeptide++) {
 					// iterate over aas

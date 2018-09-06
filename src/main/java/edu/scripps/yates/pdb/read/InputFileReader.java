@@ -15,6 +15,7 @@ import com.compomics.dbtoolkit.io.implementations.FASTADBLoader;
 import com.compomics.dbtoolkit.io.interfaces.Filter;
 
 import edu.scripps.yates.dbindex.DBIndexInterface;
+import edu.scripps.yates.dbindex.DBIndexStoreException;
 import edu.scripps.yates.dbindex.IndexedProtein;
 import edu.scripps.yates.dbindex.util.FastaDigestionConfiguration;
 import edu.scripps.yates.dbindex.util.PeptideNotFoundInDBIndexException;
@@ -191,6 +192,10 @@ public class InputFileReader {
 					+ row);
 			System.exit(-1);
 		} catch (IOException e) {
+			e.printStackTrace();
+			log.error("Error reading some file: " + e.getMessage());
+			System.exit(-1);
+		} catch (DBIndexStoreException e) {
 			e.printStackTrace();
 			log.error("Error reading some file: " + e.getMessage());
 			System.exit(-1);

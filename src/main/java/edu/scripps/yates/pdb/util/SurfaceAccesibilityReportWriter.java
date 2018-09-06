@@ -138,6 +138,7 @@ public class SurfaceAccesibilityReportWriter {
 	private static void printReportForSite(Writer fw, String accession, SurfacePeptide peptide,
 			int positionOfAAInPeptide, String aa, SiteSurfaceAccessibilityReport surfaceAccesibilityReport)
 			throws IOException {
+
 		final StringBuilder sb = new StringBuilder();
 		sb.append(peptide.getSequence()).append("\t").append(positionOfAAInPeptide).append("\t");
 

@@ -55,6 +55,7 @@ public class FastaDigestionConfiguration {
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#toString()
 	 */
 	@Override

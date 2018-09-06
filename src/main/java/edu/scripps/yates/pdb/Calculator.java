@@ -303,6 +303,7 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 	public static String getStatistics() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append(numPDBStructuresList.size() + " proteins analyzed\n");
+
 		final double mean = Maths.mean(numPDBStructuresList);
 		final double stddev = Maths.stddev(numPDBStructuresList);
 		final double sum = numPDBStructuresList.sum();
@@ -559,6 +560,7 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 				log.debug(uniprotPeptideSequence + "_ is present " + peptidePositionInUniprots.size()
 						+ " times in protein " + proteinAcc);
 			}
+
 			for (final int peptidePositionInUniprot : peptidePositionInUniprots.toArray()) {
 				for (int positionInPeptide = 0; positionInPeptide < uniprotPeptideSequence
 						.length(); positionInPeptide++) {

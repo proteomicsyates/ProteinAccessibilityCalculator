@@ -199,6 +199,10 @@ public class InputFileReader {
 			e.printStackTrace();
 			log.error("Error reading some file: " + e.getMessage());
 			System.exit(-1);
+		} catch (DBIndexStoreException e) {
+			e.printStackTrace();
+			log.error("Error reading some file: " + e.getMessage());
+			System.exit(-1);
 		} finally {
 			log.info(numProteins + " proteins and " + numPeptides + " peptides readed");
 		}

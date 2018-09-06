@@ -3,7 +3,7 @@ package edu.scripps.yates.pdb.util;
 import java.io.File;
 import java.util.Arrays;
 
-import edu.scripps.yates.dbindex.util.PeptideFilter;
+import edu.scripps.yates.dbindex.model.PeptideFilter;
 import edu.scripps.yates.dbindex.util.PeptideFilterByMaxOccurrencies;
 
 public class FastaDigestionConfiguration {

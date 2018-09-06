@@ -5,7 +5,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import edu.scripps.yates.pdb.model.SurfacePeptide;
@@ -14,6 +13,7 @@ import edu.scripps.yates.pdb.surface.SiteSurfaceAccessibilityReport;
 import edu.scripps.yates.pdb.surface.SurfaceAccessibilityProteinReport;
 import edu.scripps.yates.utilities.proteomicsmodel.Ratio;
 import edu.scripps.yates.utilities.strings.StringUtils;
+import gnu.trove.list.array.TIntArrayList;
 
 public class SurfaceAccesibilityReportWriter {
 	/**
@@ -36,11 +36,11 @@ public class SurfaceAccesibilityReportWriter {
 		final String uniprotProteinSequence = surfaceAccesibilityProteinReport.getUniprotProteinSequence();
 		final int positionOfPeptideInProtein = uniprotProteinSequence.indexOf(peptideSequence);
 
-		List<Integer> positionsOfAAInPeptide = StringUtils.allPositionsOf(peptideSequence, aa);
+		TIntArrayList positionsOfAAInPeptide = StringUtils.allPositionsOf(peptideSequence, aa);
 		// in order to not repeat sites, coming from different peptides
 		Set<Integer> positionsInProtein = new HashSet<Integer>();
 
-		for (Integer positionOfAAInPeptide : positionsOfAAInPeptide) {
+		for (int positionOfAAInPeptide : positionsOfAAInPeptide.toArray()) {
 			int positionOfAAInProtein = positionOfAAInPeptide + positionOfPeptideInProtein;
 			if (positionsInProtein.contains(positionOfAAInProtein)) {
 				continue;
@@ -107,8 +107,8 @@ public class SurfaceAccesibilityReportWriter {
 		final String uniprotProteinSequence = surfaceAccesibilityProteinReport.getUniprotProteinSequence();
 		final int positionOfPeptideInProtein = uniprotProteinSequence.indexOf(peptide.getSequence());
 
-		List<Integer> positionsOfAAInPeptide = StringUtils.allPositionsOf(peptide.getSequence(), aa);
-		for (Integer positionOfAAInPeptide : positionsOfAAInPeptide) {
+		TIntArrayList positionsOfAAInPeptide = StringUtils.allPositionsOf(peptide.getSequence(), aa);
+		for (int positionOfAAInPeptide : positionsOfAAInPeptide.toArray()) {
 			int positionOfAAInProtein = positionOfAAInPeptide + positionOfPeptideInProtein;
 			final Set<SiteSurfaceAccessibilityReport> surfaceAccesibilityReports = surfaceAccesibilityProteinReport
 					.getSurfaceAccessibilityReportsBySite(positionOfAAInProtein);
@@ -137,7 +137,7 @@ public class SurfaceAccesibilityReportWriter {
 
 	private static void printReportForSite(Writer fw, String accession, SurfacePeptide peptide,
 			int positionOfAAInPeptide, String aa, SiteSurfaceAccessibilityReport surfaceAccesibilityReport)
-					throws IOException {
+			throws IOException {
 		StringBuilder sb = new StringBuilder();
 		sb.append(peptide.getSequence()).append("\t").append(positionOfAAInPeptide).append("\t");
 

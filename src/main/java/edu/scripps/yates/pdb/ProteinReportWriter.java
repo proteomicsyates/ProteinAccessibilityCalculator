@@ -10,6 +10,7 @@ import edu.scripps.yates.pdb.model.Peptide;
 import edu.scripps.yates.pdb.surface.SurfaceReport;
 import edu.scripps.yates.utilities.proteomicsmodel.Ratio;
 import edu.scripps.yates.utilities.strings.StringUtils;
+import gnu.trove.list.array.TIntArrayList;
 
 public class ProteinReportWriter {
 	/**
@@ -31,8 +32,8 @@ public class ProteinReportWriter {
 		final String uniprotProteinSequence = proteinReport.getUniprotProteinSequence();
 		final int positionOfPeptideInProtein = uniprotProteinSequence.indexOf(peptideSequence);
 
-		List<Integer> positionsOfAAInPeptide = StringUtils.allPositionsOf(peptideSequence, aa);
-		for (Integer positionOfAAInPeptide : positionsOfAAInPeptide) {
+		TIntArrayList positionsOfAAInPeptide = StringUtils.allPositionsOf(peptideSequence, aa);
+		for (int positionOfAAInPeptide : positionsOfAAInPeptide.toArray()) {
 			int positionOfAAInProtein = positionOfAAInPeptide + positionOfPeptideInProtein;
 			Set<JMolAtomReport> reports = proteinReport.getReportsBySite(positionOfAAInProtein);
 			if (reports != null) {
@@ -101,8 +102,8 @@ public class ProteinReportWriter {
 		final String uniprotProteinSequence = proteinReport.getUniprotProteinSequence();
 		final int positionOfPeptideInProtein = uniprotProteinSequence.indexOf(peptide.getSequence());
 
-		List<Integer> positionsOfAAInPeptide = StringUtils.allPositionsOf(peptide.getSequence(), aa);
-		for (Integer positionOfAAInPeptide : positionsOfAAInPeptide) {
+		TIntArrayList positionsOfAAInPeptide = StringUtils.allPositionsOf(peptide.getSequence(), aa);
+		for (Integer positionOfAAInPeptide : positionsOfAAInPeptide.toArray()) {
 			int positionOfAAInProtein = positionOfAAInPeptide + positionOfPeptideInProtein;
 			final Set<JMolAtomReport> reports = proteinReport.getReportsBySite(positionOfAAInProtein);
 			if (reports != null) {

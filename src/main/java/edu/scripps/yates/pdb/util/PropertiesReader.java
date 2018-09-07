@@ -15,6 +15,7 @@ public class PropertiesReader {
 	public static final String AMINOACIDS = "AAs";
 	public static final String ENZYME_NAME = "enzyme_name";
 	public static final String MISSEDCLEAVAGES = "missedCleavages";
+
 	public static final String SEMICLEAVAGE = "semiCleavage";
 	public static final String INPUT_FILE = "input_file";
 	public static final String INPUT_FILE_SEPARATOR = "input_file_separator";
@@ -28,6 +29,7 @@ public class PropertiesReader {
 	public static final String CALCULATION_TYPE = "calculation_type";
 	public static final String ONE_MODEL_PER_PROTEIN = "one_model_per_protein";
 	public static final String PDB_IDS = "pdb_ids";
+	public static final String ENZYME_ARRAY = "enzymeArray";
 
 	private static File file;
 
@@ -42,9 +44,9 @@ public class PropertiesReader {
 
 	public static java.util.Properties getProperties() throws IOException {
 
-		FileReader is = new FileReader(file);
+		final FileReader is = new FileReader(file);
 
-		java.util.Properties prop = new java.util.Properties();
+		final java.util.Properties prop = new java.util.Properties();
 
 		prop.load(is);
 
@@ -54,7 +56,7 @@ public class PropertiesReader {
 	public static String getPropertyValue(String propertyName) {
 		try {
 			return getProperties().getProperty(propertyName);
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			e.printStackTrace();
 		}
 		return null;

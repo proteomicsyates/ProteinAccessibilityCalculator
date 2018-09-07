@@ -157,6 +157,12 @@ public class Main {
 					if (enzyme != null) {
 						enzymeArray = enzyme.getCleavage();
 					}
+				} else {
+					String enzymeArrayString = PropertiesReader.getPropertyValue(PropertiesReader.ENZYME_ARRAY);
+					if (enzymeArrayString.contains(",")) {
+						enzymeArrayString = enzymeArrayString.replace(",", "").trim();
+					}
+					enzymeArray = enzymeArrayString.trim().toCharArray();
 				}
 			} catch (final NumberFormatException e) {
 				if (fastaFileName != null) {

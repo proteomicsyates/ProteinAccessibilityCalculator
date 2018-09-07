@@ -570,7 +570,7 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 							final int positionInUniprotProtein = peptidePositionInUniprot + positionInPeptide;
 							if (!positionsInUniprotProteinProcessed.contains(positionInUniprotProtein)) {
 								positionsInUniprotProteinProcessed.add(positionInUniprotProtein);
-								// if it is already done, don't do it
+								// if it is already done, don't do it again
 								if (proteinReport.containsReportsForPosition(positionInUniprotProtein)) {
 									continue;
 								}

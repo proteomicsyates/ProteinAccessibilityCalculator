@@ -25,14 +25,12 @@ import edu.scripps.yates.annotations.uniprot.UniprotProteinLocalRetriever;
 import edu.scripps.yates.dbindex.util.FastaDigestionConfiguration;
 import edu.scripps.yates.pdb.distance.DistanceCalculator;
 import edu.scripps.yates.pdb.distance.DistanceProteinReport;
-import edu.scripps.yates.pdb.distance.DistanceReport;
 import edu.scripps.yates.pdb.model.AtomType;
 import edu.scripps.yates.pdb.model.Peptide;
 import edu.scripps.yates.pdb.model.Protein;
 import edu.scripps.yates.pdb.read.InputFileReader;
 import edu.scripps.yates.pdb.surface.SurfaceCalculator;
 import edu.scripps.yates.pdb.surface.SurfaceProteinReport;
-import edu.scripps.yates.pdb.surface.SurfaceReport;
 import edu.scripps.yates.pdb.util.PropertiesReader;
 import edu.scripps.yates.utilities.progresscounter.ProgressCounter;
 import edu.scripps.yates.utilities.progresscounter.ProgressPrintingType;
@@ -48,7 +46,7 @@ public class Main {
 			log.error("No parameters provided");
 			System.exit(-1);
 		}
-		File propertiesFile = new File(args[0]);
+		final File propertiesFile = new File(args[0]);
 		try {
 			PropertiesReader.getProperties(propertiesFile);
 
@@ -58,35 +56,35 @@ public class Main {
 			try {
 				calculationType = CalculationType
 						.fromValue(PropertiesReader.getPropertyValue(PropertiesReader.CALCULATION_TYPE));
-			} catch (IllegalArgumentException e) {
+			} catch (final IllegalArgumentException e) {
 				log.error("Invalid " + PropertiesReader.CALCULATION_TYPE + " value. Valid values are: "
 						+ CalculationType.getValues());
 				System.exit(-1);
 			}
-			String aaAndAtomTypeString = PropertiesReader.getPropertyValue(PropertiesReader.AMINOACIDS);
-			Map<Character, List<AtomType>> atomTypeMap = new HashMap<Character, List<AtomType>>();
-			List<String> aaAndAtomTypeList = new ArrayList<String>();
+			final String aaAndAtomTypeString = PropertiesReader.getPropertyValue(PropertiesReader.AMINOACIDS);
+			final Map<Character, List<AtomType>> atomTypeMap = new HashMap<Character, List<AtomType>>();
+			final List<String> aaAndAtomTypeList = new ArrayList<String>();
 			if (aaAndAtomTypeString.contains(",")) {
-				for (String aaanaAtomTypeTmp : aaAndAtomTypeString.split(",")) {
+				for (final String aaanaAtomTypeTmp : aaAndAtomTypeString.split(",")) {
 					aaAndAtomTypeList.add(aaanaAtomTypeTmp.trim());
 				}
 			} else {
 				aaAndAtomTypeList.add(aaAndAtomTypeString);
 			}
-			for (String aaAndAtomType : aaAndAtomTypeList) {
+			for (final String aaAndAtomType : aaAndAtomTypeList) {
 				if (aaAndAtomType.contains(" ")) {
-					String[] split = aaAndAtomType.split(" ");
+					final String[] split = aaAndAtomType.split(" ");
 					if (split[0].length() != 1) {
 						log.error(
 								"AMINOACIDS parameter is incorrect. A pair of aminacid character and atom type (separated by ' ') is incorrect. Aminoacid must be one letter.");
 						System.exit(-1);
 					}
-					char aa = split[0].charAt(0);
-					AtomType atomType = AtomType.getByName(split[1]);
+					final char aa = split[0].charAt(0);
+					final AtomType atomType = AtomType.getByName(split[1]);
 					if (atomTypeMap.containsKey(aa)) {
 						atomTypeMap.get(aa).add(atomType);
 					} else {
-						List<AtomType> list = new ArrayList<AtomType>();
+						final List<AtomType> list = new ArrayList<AtomType>();
 						list.add(atomType);
 						atomTypeMap.put(aa, list);
 					}
@@ -97,16 +95,16 @@ public class Main {
 				}
 			}
 
-			String pdbFolderString = PropertiesReader.getPropertyValue(PropertiesReader.PDB_FOLDER);
-			File parentPDBFolder = new File(pdbFolderString);
+			final String pdbFolderString = PropertiesReader.getPropertyValue(PropertiesReader.PDB_FOLDER);
+			final File parentPDBFolder = new File(pdbFolderString);
 
 			if (calculationType == CalculationType.PDB_SURFACE) {
-				List<String> pdbIDList = new ArrayList<String>();
-				String pdbIDsString = PropertiesReader.getPropertyValue(PropertiesReader.PDB_IDS);
+				final List<String> pdbIDList = new ArrayList<String>();
+				final String pdbIDsString = PropertiesReader.getPropertyValue(PropertiesReader.PDB_IDS);
 				if (pdbIDsString != null && !"".equals(pdbIDsString)) {
 
 					if (pdbIDsString.contains(",")) {
-						for (String pdbID : pdbIDsString.split(",")) {
+						for (final String pdbID : pdbIDsString.split(",")) {
 							pdbIDList.add(pdbID.trim());
 						}
 					} else {
@@ -120,9 +118,10 @@ public class Main {
 				outputFile = Paths.get(getJarFolder().getAbsolutePath() + File.separator + "PDB_SURFACE_REPORT.txt");
 				writer = Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8, StandardOpenOption.CREATE,
 						StandardOpenOption.WRITE);
-				writer.write(SurfaceReport.getStaticHeaders() + "\n");
-				SurfaceCalculator surfaceCalculator = new SurfaceCalculator(atomTypeMap, true, true, parentPDBFolder);
-				for (String pdbID : pdbIDList) {
+				writer.write(JMolAtomReport.getStaticHeaders() + "\n");
+				final SurfaceCalculator surfaceCalculator = new SurfaceCalculator(atomTypeMap, true, true,
+						parentPDBFolder);
+				for (final String pdbID : pdbIDList) {
 					final SurfaceProteinReport surfaceAccesibilityReport = surfaceCalculator
 							.getReportFromPDBModel(pdbID);
 					if (surfaceAccesibilityReport == null) {
@@ -137,30 +136,46 @@ public class Main {
 				return;
 			}
 
-			String uniprotFolder = PropertiesReader.getPropertyValue(PropertiesReader.UNIPROT_FOLDER);
-			File uniprotReleasesFolder = new File(uniprotFolder);
+			final String uniprotFolder = PropertiesReader.getPropertyValue(PropertiesReader.UNIPROT_FOLDER);
+			final File uniprotReleasesFolder = new File(uniprotFolder);
 			String uniprotVersion = PropertiesReader.getPropertyValue(PropertiesReader.UNIPROT_VERSION);
 			if ("".equals(uniprotVersion)) {
 				uniprotVersion = null;
 			}
-			UniprotProteinLocalRetriever uplr = new UniprotProteinLocalRetriever(uniprotReleasesFolder, true);
+			final UniprotProteinLocalRetriever uplr = new UniprotProteinLocalRetriever(uniprotReleasesFolder, true);
 
-			String enzymeName = PropertiesReader.getPropertyValue(PropertiesReader.ENZYME_NAME);
+			final String fastaFileName = PropertiesReader.getPropertyValue(PropertiesReader.FASTA_FILE);
+
+			final String enzymeName = PropertiesReader.getPropertyValue(PropertiesReader.ENZYME_NAME);
 			char[] enzymeArray = null;
-			int missedCleavages = Integer.valueOf(PropertiesReader.getPropertyValue(PropertiesReader.MISSEDCLEAVAGES));
-			if (enzymeName != null && !"".equals(enzymeName)) {
-				Enzyme enzyme = EnzymeLoader.loadEnzyme(enzymeName, String.valueOf(missedCleavages));
+			int missedCleavages = 0;
+			try {
+				missedCleavages = Integer.valueOf(PropertiesReader.getPropertyValue(PropertiesReader.MISSEDCLEAVAGES));
+				if (enzymeName != null && !"".equals(enzymeName)) {
+					final Enzyme enzyme = EnzymeLoader.loadEnzyme(enzymeName, String.valueOf(missedCleavages));
 
-				if (enzyme != null) {
-					enzymeArray = enzyme.getCleavage();
+					if (enzyme != null) {
+						enzymeArray = enzyme.getCleavage();
+					}
+				}
+			} catch (final NumberFormatException e) {
+				if (fastaFileName != null) {
+					throw new IllegalArgumentException(
+							PropertiesReader.MISSEDCLEAVAGES + " parameter is missing when using FASTA file");
 				}
 			}
-			boolean semicleavage = Boolean.valueOf(PropertiesReader.getPropertyValue(PropertiesReader.SEMICLEAVAGE));
-			boolean ignorePeptidesNotFoundInDB = Boolean
-					.valueOf(PropertiesReader.getPropertyValue(PropertiesReader.IGNORE_PEPTIDE_NOT_FOUND_IN_DB));
-			FastaDigestionConfiguration fastaDigestion = null;
-			String inputFileName = PropertiesReader.getPropertyValue(PropertiesReader.INPUT_FILE);
-			File inputFile = new File(inputFileName);
+			Boolean semicleavage = null;
+			Boolean ignorePeptidesNotFoundInDB = null;
+			try {
+				semicleavage = Boolean.valueOf(PropertiesReader.getPropertyValue(PropertiesReader.SEMICLEAVAGE));
+				ignorePeptidesNotFoundInDB = Boolean
+						.valueOf(PropertiesReader.getPropertyValue(PropertiesReader.IGNORE_PEPTIDE_NOT_FOUND_IN_DB));
+			} catch (final Exception e) {
+				throw new IllegalArgumentException("Error in parameters " + PropertiesReader.SEMICLEAVAGE + " or "
+						+ PropertiesReader.IGNORE_PEPTIDE_NOT_FOUND_IN_DB + ". They are needed when using FASTA file");
+			}
+			final String inputFileName = PropertiesReader.getPropertyValue(PropertiesReader.INPUT_FILE);
+			final File inputFile = new File(inputFileName);
 			if (!inputFile.exists()) {
 				log.error("Input file " + inputFileName + " doesnt exist");
 				System.exit(-1);
@@ -176,7 +191,7 @@ public class Main {
 				System.exit(-1);
 			}
 			boolean skipHeader = false;
-			String skipHeaderString = PropertiesReader.getPropertyValue(PropertiesReader.SKIP_FIRST_LINE);
+			final String skipHeaderString = PropertiesReader.getPropertyValue(PropertiesReader.SKIP_FIRST_LINE);
 			if ("TRUE".equalsIgnoreCase(skipHeaderString)) {
 				skipHeader = true;
 			} else if ("FALSE".equalsIgnoreCase(skipHeaderString)) {
@@ -186,7 +201,8 @@ public class Main {
 				System.exit(-1);
 			}
 			boolean oneModelPerPRotein = true;
-			String oneModelPerProteinString = PropertiesReader.getPropertyValue(PropertiesReader.ONE_MODEL_PER_PROTEIN);
+			final String oneModelPerProteinString = PropertiesReader
+					.getPropertyValue(PropertiesReader.ONE_MODEL_PER_PROTEIN);
 			if (!"".equals(oneModelPerProteinString)) {
 				oneModelPerPRotein = Boolean.valueOf(oneModelPerProteinString);
 			}
@@ -197,22 +213,24 @@ public class Main {
 			try {
 				peptideSequenceColumnIndex = Integer
 						.valueOf(PropertiesReader.getPropertyValue(PropertiesReader.PEPTIDE_SEQUENCE_COLUMN_INDEX));
-			} catch (NumberFormatException e) {
+			} catch (final NumberFormatException e) {
 				log.error(PropertiesReader.PEPTIDE_RATIO_COLUMN_INDEX + " property has to be a number");
 				System.exit(-1);
 			}
 			try {
 				peptideRatioColumnIndex = Integer
 						.valueOf(PropertiesReader.getPropertyValue(PropertiesReader.PEPTIDE_RATIO_COLUMN_INDEX));
-			} catch (NumberFormatException e) {
+			} catch (final NumberFormatException e) {
 				log.error(PropertiesReader.PEPTIDE_RATIO_COLUMN_INDEX + " property has to be a number");
 				System.exit(-1);
 			}
 
-			String peptideFilterRegexp = PropertiesReader.getPropertyValue(PropertiesReader.PEPTIDE_FILTER_REGEXP);
+			final String peptideFilterRegexp = PropertiesReader
+					.getPropertyValue(PropertiesReader.PEPTIDE_FILTER_REGEXP);
 			// if fasta file is provided, then ignore the protein accession
 			// column index
-			String fastaFileName = PropertiesReader.getPropertyValue(PropertiesReader.FASTA_FILE);
+			FastaDigestionConfiguration fastaDigestion = null;
+
 			File fastaFile = null;
 			if (fastaFileName != null) {
 				fastaFile = new File(fastaFileName);
@@ -227,7 +245,7 @@ public class Main {
 				try {
 					proteinAccessionColumnIndex = Integer
 							.valueOf(PropertiesReader.getPropertyValue(PropertiesReader.PROTEIN_ACC_COLUMN_INDEX));
-				} catch (NumberFormatException e) {
+				} catch (final NumberFormatException e) {
 					log.error(PropertiesReader.PROTEIN_ACC_COLUMN_INDEX + " property has to be a number");
 					System.exit(-1);
 				}
@@ -235,7 +253,7 @@ public class Main {
 
 			switch (calculationType) {
 			case DISTANCE:
-				DistanceCalculator distanceCalculator = new DistanceCalculator(uplr, atomTypeMap, true, true,
+				final DistanceCalculator distanceCalculator = new DistanceCalculator(uplr, atomTypeMap, true, true,
 						oneModelPerPRotein, parentPDBFolder, 2.0);
 				distanceCalculator.setUniprotVersion(uniprotVersion);
 				distanceCalculator.setDigestionConfiguration(fastaDigestion);
@@ -247,10 +265,10 @@ public class Main {
 						+ "_DISTANCE_REPORT.txt");
 				writer = Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8, StandardOpenOption.CREATE,
 						StandardOpenOption.WRITE);
-				writer.write(ProteinReportWriter.getPeptideReportHeader(DistanceReport.getStaticHeaders()) + "\n");
+				writer.write(ProteinReportWriter.getPeptideReportHeader(JMolAtomReport.getStaticHeaders()) + "\n");
 				counter = new ProgressCounter(proteins.size(), ProgressPrintingType.PERCENTAGE_STEPS, 0);
 				distanceCalculator.getUplr().getAnnotatedProteins(uniprotVersion, proteins.keySet());
-				for (Protein protein : proteins.values()) {
+				for (final Protein protein : proteins.values()) {
 					final DistanceProteinReport proteinReport = distanceCalculator.getReportFromProtein(protein, null,
 							null);
 					counter.increment();
@@ -263,7 +281,7 @@ public class Main {
 						continue;
 					}
 					final Set<Peptide> peptides = protein.getPeptides();
-					for (Peptide peptide : peptides) {
+					for (final Peptide peptide : peptides) {
 
 						ProteinReportWriter.printReportForPeptide(writer, peptide, proteinReport, aaAndAtomTypeString,
 								false);
@@ -271,7 +289,7 @@ public class Main {
 				}
 				break;
 			case SURFACE:
-				SurfaceCalculator surfaceCalculator = new SurfaceCalculator(uplr, atomTypeMap, true, true,
+				final SurfaceCalculator surfaceCalculator = new SurfaceCalculator(uplr, atomTypeMap, true, true,
 						oneModelPerPRotein, parentPDBFolder);
 				surfaceCalculator.setUniprotVersion(uniprotVersion);
 				surfaceCalculator.setDigestionConfiguration(fastaDigestion);
@@ -283,10 +301,10 @@ public class Main {
 						+ "_SURFACE_REPORT.txt");
 				writer = Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8, StandardOpenOption.CREATE,
 						StandardOpenOption.WRITE);
-				writer.write(ProteinReportWriter.getPeptideReportHeader(SurfaceReport.getStaticHeaders()) + "\n");
+				writer.write(ProteinReportWriter.getPeptideReportHeader(JMolAtomReport.getStaticHeaders()) + "\n");
 				counter = new ProgressCounter(proteins.size(), ProgressPrintingType.PERCENTAGE_STEPS, 0);
 				surfaceCalculator.getUplr().getAnnotatedProteins(null, proteins.keySet());
-				for (Protein protein : proteins.values()) {
+				for (final Protein protein : proteins.values()) {
 					counter.increment();
 					final SurfaceProteinReport surfaceAccesibilityFromProtein = surfaceCalculator
 							.getReportFromProtein(protein, null, null);
@@ -299,7 +317,7 @@ public class Main {
 						continue;
 					}
 					final Set<Peptide> peptides = protein.getPeptides();
-					for (Peptide peptide : peptides) {
+					for (final Peptide peptide : peptides) {
 						ProteinReportWriter.printReportForPeptide(writer, peptide, surfaceAccesibilityFromProtein,
 								aaAndAtomTypeString, false);
 					}
@@ -309,7 +327,7 @@ public class Main {
 				break;
 			}
 
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			e.printStackTrace();
 			log.error(e.getMessage());
 			System.exit(-1);
@@ -318,7 +336,7 @@ public class Main {
 			if (writer != null) {
 				try {
 					writer.close();
-				} catch (IOException e) {
+				} catch (final IOException e) {
 					e.printStackTrace();
 					log.error(e.getMessage());
 					System.exit(-1);

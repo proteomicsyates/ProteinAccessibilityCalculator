@@ -55,7 +55,9 @@ public class InputFileReader {
 
 				for (row = 0; row < peptideSequences.size(); row++) {
 					final String acc = proteinAccs.get(row);
-					final String sequence = peptideSequences.get(row);
+					// get rawsequence. it can be a peptide node string such as
+					// PEPTIDE1_PEPTIDE2_PEPTIDE3
+					final String rawSequence = peptideSequences.get(row);
 					Double ratio = null;
 					if (peptideRatios != null) {
 						ratioString = peptideRatios.get(row);
@@ -75,9 +77,20 @@ public class InputFileReader {
 						numProteins++;
 						ret.put(acc, protein);
 					}
-					final Peptide peptide = new Peptide(sequence, ratio);
-					numPeptides++;
-					protein.getPeptides().add(peptide);
+					final List<String> sequences = new ArrayList<String>();
+					if (rawSequence.contains("_")) {
+						for (final String seq : rawSequence.split("_")) {
+							sequences.add(seq);
+						}
+					} else {
+						sequences.add(rawSequence);
+					}
+					for (final String seq : sequences) {
+						final Peptide peptide = new Peptide(seq, ratio);
+						numPeptides++;
+						protein.getPeptides().add(peptide);
+					}
+
 				}
 			} else {
 				if (fastaDigestion.getEnzymeArray() != null) {

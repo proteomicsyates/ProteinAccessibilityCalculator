@@ -21,7 +21,7 @@ The input parameter file is a simple text with a set of name-value pairs of para
  - For ***distance*** running mode, look at example parameter file [here](https://raw.githubusercontent.com/proteomicsyates/ProteinAccessibilityCalculator/master/input_distances.properties).
 
 ## Getting help
-For any customization of the program, report any issue or ask any question, please contact to **Salvador Martinez-Bartolome** (salvador at scripss.edu)
+For any customization of the program, report any issue or ask any question, please contact to **Salvador Martinez-Bartolome** (salvador at scripps.edu)
 
 
 

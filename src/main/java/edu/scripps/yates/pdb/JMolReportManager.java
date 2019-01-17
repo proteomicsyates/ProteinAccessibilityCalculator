@@ -22,9 +22,9 @@ import java.util.stream.Collectors;
 import org.apache.log4j.Logger;
 
 import edu.scripps.yates.annotations.uniprot.UniprotProteinLocalRetriever;
-import edu.scripps.yates.annotations.uniprot.xml.Entry;
 import edu.scripps.yates.pdb.model.Protein;
 import edu.scripps.yates.pdb.surface.SurfaceCalculator;
+import edu.scripps.yates.utilities.annotations.uniprot.xml.Entry;
 import edu.scripps.yates.utilities.progresscounter.ProgressCounter;
 import edu.scripps.yates.utilities.progresscounter.ProgressPrintingType;
 import gnu.trove.map.hash.THashMap;

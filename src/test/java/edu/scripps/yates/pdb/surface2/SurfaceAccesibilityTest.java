@@ -20,9 +20,9 @@ import org.junit.Test;
 import edu.scripps.yates.annotations.go.GORetriever;
 import edu.scripps.yates.annotations.uniprot.UniprotProteinLocalRetriever;
 import edu.scripps.yates.annotations.uniprot.UniprotProteinRetrievalSettings;
-import edu.scripps.yates.annotations.uniprot.xml.Entry;
 import edu.scripps.yates.dbindex.util.DigestionConfiguration;
 import edu.scripps.yates.excel.proteindb.importcfg.adapter.ImportCfgFileReader;
+import edu.scripps.yates.pdb.Calculator;
 import edu.scripps.yates.pdb.JMolAtomReport;
 import edu.scripps.yates.pdb.ProteinReportWriter;
 import edu.scripps.yates.pdb.model.AtomType;
@@ -32,17 +32,18 @@ import edu.scripps.yates.pdb.surface.SurfaceCalculator;
 import edu.scripps.yates.pdb.surface.SurfaceProteinReport;
 import edu.scripps.yates.pdb.surface.SurfaceProteinReportManager;
 import edu.scripps.yates.pdb.surface.SurfaceReport;
+import edu.scripps.yates.utilities.annotations.uniprot.xml.Entry;
 import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.files.FileUtils;
 import edu.scripps.yates.utilities.jaxb.xpathquery.JAXBXPathQuery;
-import edu.scripps.yates.utilities.model.enums.AggregationLevel;
-import edu.scripps.yates.utilities.model.factories.RatioEx;
 import edu.scripps.yates.utilities.progresscounter.ProgressCounter;
 import edu.scripps.yates.utilities.progresscounter.ProgressPrintingType;
 import edu.scripps.yates.utilities.proteomicsmodel.Condition;
 import edu.scripps.yates.utilities.proteomicsmodel.PSM;
 import edu.scripps.yates.utilities.proteomicsmodel.Project;
 import edu.scripps.yates.utilities.proteomicsmodel.Ratio;
+import edu.scripps.yates.utilities.proteomicsmodel.enums.AggregationLevel;
+import edu.scripps.yates.utilities.proteomicsmodel.factories.RatioEx;
 import edu.scripps.yates.utilities.strings.StringUtils;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
@@ -57,26 +58,26 @@ public class SurfaceAccesibilityTest {
 	@Test
 	public void surfaceAccebilityTest1() {
 		final Protein protein = new Protein("Q9UKV8");
-		UniprotProteinLocalRetriever uplr = new UniprotProteinLocalRetriever(
+		final UniprotProteinLocalRetriever uplr = new UniprotProteinLocalRetriever(
 				new File("z:\\share\\Salva\\data\\uniprotKB"), true);
-		File pdbFolder = new File("z:\\share\\Salva\\data\\pdb");
+		final File pdbFolder = new File("z:\\share\\Salva\\data\\pdb");
 
-		char aa = 'K';
-		AtomType atomType = AtomType.NZ;
+		final char aa = 'K';
+		final AtomType atomType = AtomType.NZ;
 
-		SurfaceCalculator calc = new SurfaceCalculator(uplr, aa, atomType, removeOtherChains, removeOtherMolecules,
-				true, pdbFolder);
+		final SurfaceCalculator calc = new SurfaceCalculator(uplr, aa, atomType, removeOtherChains,
+				removeOtherMolecules, true, pdbFolder);
 		final SurfaceProteinReport proteinReport = calc.getReportFromProtein(protein, null, null);
 		final TIntObjectHashMap<Set<SurfaceReport>> accesibilitiesByPositionInUniprotSeq = proteinReport
 				.getReportsByPositionInUniprotSeq();
-		List<Integer> positionList = new ArrayList<Integer>();
-		for (int position : accesibilitiesByPositionInUniprotSeq.keys()) {
+		final List<Integer> positionList = new ArrayList<Integer>();
+		for (final int position : accesibilitiesByPositionInUniprotSeq.keys()) {
 			positionList.add(position);
 		}
 		Collections.sort(positionList);
-		for (Integer position : positionList) {
+		for (final Integer position : positionList) {
 			final Set<SurfaceReport> surfaceAccesibilityReports = accesibilitiesByPositionInUniprotSeq.get(position);
-			for (SurfaceReport surfaceAccessibilityReport : surfaceAccesibilityReports) {
+			for (final SurfaceReport surfaceAccessibilityReport : surfaceAccesibilityReports) {
 				System.out.println(surfaceAccessibilityReport);
 			}
 
@@ -88,30 +89,30 @@ public class SurfaceAccesibilityTest {
 	public void surfaceAccebilityTestWithManager() {
 
 		// accs.add("Q9HD26-2");
-		UniprotProteinLocalRetriever uplr = new UniprotProteinLocalRetriever(
+		final UniprotProteinLocalRetriever uplr = new UniprotProteinLocalRetriever(
 				new File("z:\\share\\Salva\\data\\uniprotKB"), true);
-		File pdbFolder = new File("z:\\share\\Salva\\data\\pdb");
+		final File pdbFolder = new File("z:\\share\\Salva\\data\\pdb");
 
-		char aa = 'K';
-		AtomType atomType = AtomType.NZ;
+		final char aa = 'K';
+		final AtomType atomType = AtomType.NZ;
 
-		SurfaceCalculator calc = new SurfaceCalculator(uplr, aa, atomType, removeOtherChains, removeOtherMolecules,
-				true, pdbFolder);
+		final SurfaceCalculator calc = new SurfaceCalculator(uplr, aa, atomType, removeOtherChains,
+				removeOtherMolecules, true, pdbFolder);
 		calc.setDigestionConfiguration(getDigestionConfiguration());
-		SurfaceProteinReportManager manager = new SurfaceProteinReportManager(calc);
+		final SurfaceProteinReportManager manager = new SurfaceProteinReportManager(calc);
 		final SurfaceProteinReport surfaceAccesibilityProteinReport = manager.getProteinReportByProtein("Q9UKV8", null);
 
 		final TIntObjectHashMap<Set<SurfaceReport>> accesibilitiesByPositionInUniprotSeq = surfaceAccesibilityProteinReport
 				.getReportsByPositionInUniprotSeq();
-		List<Integer> positionList = new ArrayList<Integer>();
-		for (int position : accesibilitiesByPositionInUniprotSeq.keys()) {
+		final List<Integer> positionList = new ArrayList<Integer>();
+		for (final int position : accesibilitiesByPositionInUniprotSeq.keys()) {
 			positionList.add(position);
 		}
 
 		Collections.sort(positionList);
-		for (Integer position : positionList) {
+		for (final Integer position : positionList) {
 			final Set<SurfaceReport> surfaceAccesibilityReports = accesibilitiesByPositionInUniprotSeq.get(position);
-			for (SurfaceReport surfaceAccessibilityReport : surfaceAccesibilityReports) {
+			for (final SurfaceReport surfaceAccessibilityReport : surfaceAccesibilityReports) {
 				System.out.println(surfaceAccessibilityReport);
 			}
 
@@ -120,11 +121,11 @@ public class SurfaceAccesibilityTest {
 	}
 
 	private DigestionConfiguration getDigestionConfiguration() {
-		char[] enzymeArray = { 'K' };
-		int numMisscleavages = 1;
-		boolean semiCleavage = false;
-		String peptideFilterString = null;
-		DigestionConfiguration ret = new DigestionConfiguration(enzymeArray, numMisscleavages, semiCleavage,
+		final char[] enzymeArray = { 'K' };
+		final int numMisscleavages = 1;
+		final boolean semiCleavage = false;
+		final String peptideFilterString = null;
+		final DigestionConfiguration ret = new DigestionConfiguration(enzymeArray, numMisscleavages, semiCleavage,
 				peptideFilterString);
 		return ret;
 	}
@@ -132,19 +133,20 @@ public class SurfaceAccesibilityTest {
 	@Test
 	public void surfaceAccesibilityFromRemoteFiles() {
 
-		File outputFile = new File("z:\\share\\Salva\\data\\PINT projects\\molecular painting\\surface.csv");
+		final File outputFile = new File("z:\\share\\Salva\\data\\PINT projects\\molecular painting\\surface.csv");
 		final File uniprotReleasesFolder = new File("z:\\share\\Salva\\data\\uniprotKB");
-		UniprotProteinLocalRetriever uplr = new UniprotProteinLocalRetriever(uniprotReleasesFolder, true);
+		final UniprotProteinLocalRetriever uplr = new UniprotProteinLocalRetriever(uniprotReleasesFolder, true);
 		UniprotProteinRetrievalSettings.getInstance(uniprotReleasesFolder, true);
-		File pdbFolder = new File("z:\\share\\Salva\\data\\pdb");
-		File fastaIndexFolder = new File("C:\\Users\\Salva\\Desktop\\tmp\\Pint\\fasta");
-		File projectConfigFile = new File("z:\\share\\Salva\\data\\PINT projects\\molecular painting\\HS_Hek293.xml");
-		ImportCfgFileReader cfgReader = new ImportCfgFileReader();
+		final File pdbFolder = new File("z:\\share\\Salva\\data\\pdb");
+		final File fastaIndexFolder = new File("C:\\Users\\Salva\\Desktop\\tmp\\Pint\\fasta");
+		final File projectConfigFile = new File(
+				"z:\\share\\Salva\\data\\PINT projects\\molecular painting\\HS_Hek293.xml");
+		final ImportCfgFileReader cfgReader = new ImportCfgFileReader();
 
 		final Project project = cfgReader.getProjectFromCfgFile(projectConfigFile, fastaIndexFolder);
-		char aa = 'K';
-		AtomType atomType = AtomType.NZ;
-		boolean printOnlyTheMostAccessibleSite = false;
+		final char aa = 'K';
+		final AtomType atomType = AtomType.NZ;
+		final boolean printOnlyTheMostAccessibleSite = false;
 
 		int psmsNoAA = 0;
 		int psmsWithAANoRatios = 0;
@@ -154,26 +156,26 @@ public class SurfaceAccesibilityTest {
 		try {
 			fw = new FileWriter(outputFile);
 
-			SurfaceCalculator calc = new SurfaceCalculator(uplr, aa, atomType, removeOtherChains, removeOtherMolecules,
-					true, pdbFolder);
-			Set<Protein> proteinAccs = getProteinAccsFromProject(project);
+			final SurfaceCalculator calc = new SurfaceCalculator(uplr, aa, atomType, removeOtherChains,
+					removeOtherMolecules, true, pdbFolder);
+			final Set<Protein> proteinAccs = getProteinAccsFromProject(project);
 
-			List<String> ratioScoreNames = getRatioScoreNamesFromProject(project);
+			final List<String> ratioScoreNames = getRatioScoreNamesFromProject(project);
 			printHeader(fw, ratioScoreNames);
-			SurfaceProteinReportManager manager = new SurfaceProteinReportManager(calc);
+			final SurfaceProteinReportManager manager = new SurfaceProteinReportManager(calc);
 			manager.setCalculateIfNotPresent(true);
 			final Map<String, SurfaceProteinReport> surfaceAccesibilityFromProteins = manager
 					.getReportsFromProteins(proteinAccs);
-			Set<String> psmIds = new THashSet<String>();
-			Set<String> peptideSequences = new THashSet<String>();
-			Set<String> peptideSequencesValid = new THashSet<String>();
-			Set<String> uniquePositionsValid = new THashSet<String>();
-			Set<String> proteinsWithNoPDBInformation = new THashSet<String>();
-			Set<String> totalProteins = new THashSet<String>();
+			final Set<String> psmIds = new THashSet<String>();
+			final Set<String> peptideSequences = new THashSet<String>();
+			final Set<String> peptideSequencesValid = new THashSet<String>();
+			final Set<String> uniquePositionsValid = new THashSet<String>();
+			final Set<String> proteinsWithNoPDBInformation = new THashSet<String>();
+			final Set<String> totalProteins = new THashSet<String>();
 			final Set<Condition> conditions = project.getConditions();
-			for (Condition condition : conditions) {
+			for (final Condition condition : conditions) {
 				final Set<PSM> psMs = condition.getPSMs();
-				for (PSM psm : psMs) {
+				for (final PSM psm : psMs) {
 					final String peptideSequence = psm.getSequence();
 
 					peptideSequences.add(peptideSequence);
@@ -189,7 +191,7 @@ public class SurfaceAccesibilityTest {
 							continue;
 						}
 						Ratio ratio = null;
-						for (Ratio ratio2 : psm.getRatios()) {
+						for (final Ratio ratio2 : psm.getRatios()) {
 							if (ratio2.getDescription().equals("AREA_RATIO")) {
 								ratio = ratio2;
 							}
@@ -200,16 +202,15 @@ public class SurfaceAccesibilityTest {
 						}
 						validPSMs++;
 
-						Set<String> accs = getProteinAccessions(psm.getProteins());
+						final Set<String> accs = getProteinAccessions(psm.getProteins());
 						totalProteins.addAll(accs);
-						for (String acc : accs) {
+						for (final String acc : accs) {
 							if (surfaceAccesibilityFromProteins.containsKey(acc)) {
 								peptideSequencesValid.add(peptideSequence);
 								final SurfaceProteinReport surfaceAccesibilityProteinReport = surfaceAccesibilityFromProteins
 										.get(acc);
-								ProteinReportWriter.printReportForPsm(fw, ratio, psm.getIdentifier(),
-										peptideSequence, surfaceAccesibilityProteinReport, aa,
-										printOnlyTheMostAccessibleSite);
+								ProteinReportWriter.printReportForPsm(fw, ratio, psm.getIdentifier(), peptideSequence,
+										surfaceAccesibilityProteinReport, aa, printOnlyTheMostAccessibleSite);
 								uniquePositionsValid
 										.addAll(surfaceAccesibilityProteinReport.getUniquePositionsInProteinKeys());
 							} else {
@@ -232,7 +233,7 @@ public class SurfaceAccesibilityTest {
 			fw.write(totalProteins.size() + " total different proteins\n");
 			fw.write(proteinsWithNoPDBInformation.size() + " proteins with no PDB information\n");
 			fw.close();
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			e.printStackTrace();
 			fail();
 		}
@@ -241,19 +242,21 @@ public class SurfaceAccesibilityTest {
 	@Test
 	public void surfaceAccesibilityFromRemoteFiles_DNABinding() {
 
-		File outputFile = new File("z:\\share\\Salva\\data\\PINT projects\\molecular painting\\surface_DNABinding.csv");
+		final File outputFile = new File(
+				"z:\\share\\Salva\\data\\PINT projects\\molecular painting\\surface_DNABinding.csv");
 		final File uniprotReleasesFolder = new File("z:\\share\\Salva\\data\\uniprotKB");
-		UniprotProteinLocalRetriever uplr = new UniprotProteinLocalRetriever(uniprotReleasesFolder, true);
+		final UniprotProteinLocalRetriever uplr = new UniprotProteinLocalRetriever(uniprotReleasesFolder, true);
 		UniprotProteinRetrievalSettings.getInstance(uniprotReleasesFolder, true);
-		File pdbFolder = new File("z:\\share\\Salva\\data\\pdb");
-		File fastaIndexFolder = new File("C:\\Users\\Salva\\Desktop\\tmp\\Pint\\fasta");
-		File projectConfigFile = new File("z:\\share\\Salva\\data\\PINT projects\\molecular painting\\HS_Hek293.xml");
-		ImportCfgFileReader cfgReader = new ImportCfgFileReader();
+		final File pdbFolder = new File("z:\\share\\Salva\\data\\pdb");
+		final File fastaIndexFolder = new File("C:\\Users\\Salva\\Desktop\\tmp\\Pint\\fasta");
+		final File projectConfigFile = new File(
+				"z:\\share\\Salva\\data\\PINT projects\\molecular painting\\HS_Hek293.xml");
+		final ImportCfgFileReader cfgReader = new ImportCfgFileReader();
 
 		final Project project = cfgReader.getProjectFromCfgFile(projectConfigFile, fastaIndexFolder);
-		char aa = 'K';
-		AtomType atomType = AtomType.NZ;
-		boolean printOnlyTheMostAccessibleSite = false;
+		final char aa = 'K';
+		final AtomType atomType = AtomType.NZ;
+		final boolean printOnlyTheMostAccessibleSite = false;
 
 		int psmsNoAA = 0;
 		int psmsWithAANoRatios = 0;
@@ -263,28 +266,28 @@ public class SurfaceAccesibilityTest {
 		try {
 			fw = new FileWriter(outputFile);
 
-			SurfaceCalculator calc = new SurfaceCalculator(uplr, aa, atomType, removeOtherChains, removeOtherMolecules,
-					true, pdbFolder);
-			Set<Protein> proteinAccs = getProteinAccsFromProject(project);
+			final SurfaceCalculator calc = new SurfaceCalculator(uplr, aa, atomType, removeOtherChains,
+					removeOtherMolecules, true, pdbFolder);
+			final Set<Protein> proteinAccs = getProteinAccsFromProject(project);
 
-			List<Protein> dnaBindingProteins = filterDNABindingProteins(proteinAccs, uplr);
+			final List<Protein> dnaBindingProteins = filterDNABindingProteins(proteinAccs, uplr);
 
-			List<String> ratioScoreNames = getRatioScoreNamesFromProject(project);
+			final List<String> ratioScoreNames = getRatioScoreNamesFromProject(project);
 			printHeader(fw, ratioScoreNames);
-			SurfaceProteinReportManager manager = new SurfaceProteinReportManager(calc);
+			final SurfaceProteinReportManager manager = new SurfaceProteinReportManager(calc);
 			manager.setCalculateIfNotPresent(true);
 			final Map<String, SurfaceProteinReport> surfaceAccesibilityFromProteins = manager
 					.getReportsFromProteins(dnaBindingProteins, null);
-			Set<String> psmIds = new THashSet<String>();
-			Set<String> peptideSequences = new THashSet<String>();
-			Set<String> peptideSequencesValid = new THashSet<String>();
-			Set<String> uniquePositionsValid = new THashSet<String>();
-			Set<String> proteinsWithNoPDBInformation = new THashSet<String>();
-			Set<String> totalProteins = new THashSet<String>();
+			final Set<String> psmIds = new THashSet<String>();
+			final Set<String> peptideSequences = new THashSet<String>();
+			final Set<String> peptideSequencesValid = new THashSet<String>();
+			final Set<String> uniquePositionsValid = new THashSet<String>();
+			final Set<String> proteinsWithNoPDBInformation = new THashSet<String>();
+			final Set<String> totalProteins = new THashSet<String>();
 			final Set<Condition> conditions = project.getConditions();
-			for (Condition condition : conditions) {
+			for (final Condition condition : conditions) {
 				final Set<PSM> psMs = condition.getPSMs();
-				for (PSM psm : psMs) {
+				for (final PSM psm : psMs) {
 					final String peptideSequence = psm.getSequence();
 
 					peptideSequences.add(peptideSequence);
@@ -300,7 +303,7 @@ public class SurfaceAccesibilityTest {
 							continue;
 						}
 						Ratio ratio = null;
-						for (Ratio ratio2 : psm.getRatios()) {
+						for (final Ratio ratio2 : psm.getRatios()) {
 							if (ratio2.getDescription().equals("AREA_RATIO")) {
 								ratio = ratio2;
 							}
@@ -311,16 +314,15 @@ public class SurfaceAccesibilityTest {
 						}
 						validPSMs++;
 
-						Set<String> accs = getProteinAccessions(psm.getProteins());
+						final Set<String> accs = getProteinAccessions(psm.getProteins());
 						totalProteins.addAll(accs);
-						for (String acc : accs) {
+						for (final String acc : accs) {
 							if (surfaceAccesibilityFromProteins.containsKey(acc)) {
 								peptideSequencesValid.add(peptideSequence);
 								final SurfaceProteinReport surfaceAccesibilityProteinReport = surfaceAccesibilityFromProteins
 										.get(acc);
-								ProteinReportWriter.printReportForPsm(fw, ratio, psm.getIdentifier(),
-										peptideSequence, surfaceAccesibilityProteinReport, aa,
-										printOnlyTheMostAccessibleSite);
+								ProteinReportWriter.printReportForPsm(fw, ratio, psm.getIdentifier(), peptideSequence,
+										surfaceAccesibilityProteinReport, aa, printOnlyTheMostAccessibleSite);
 								uniquePositionsValid
 										.addAll(surfaceAccesibilityProteinReport.getUniquePositionsInProteinKeys());
 							} else {
@@ -343,7 +345,7 @@ public class SurfaceAccesibilityTest {
 			fw.write(totalProteins.size() + " total different proteins\n");
 			fw.write(proteinsWithNoPDBInformation.size() + " proteins with no PDB information\n");
 			fw.close();
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			e.printStackTrace();
 			fail();
 		}
@@ -351,64 +353,64 @@ public class SurfaceAccesibilityTest {
 
 	@Test
 	public void surfaceAccesibilityFromRemoteFiles_DNABinding_FromTable() {
-		String GO = "GO:0003677";
-		boolean filterByAnnotation = false;
+		final String GO = "GO:0003677";
+		final boolean filterByAnnotation = false;
 		// Double minRatio = -Double.MAX_VALUE;
-		Double minRatio = 0.0;
+		final Double minRatio = 0.0;
 		// this gets the experimental data from a table
-		OntologyTermI goTerm = new GORetriever(new File("z:\\share\\Salva\\data\\go")).getGOTermByID(GO);
+		final OntologyTermI goTerm = new GORetriever(new File("z:\\share\\Salva\\data\\go")).getGOTermByID(GO);
 		String goName = "";
 		if (goTerm != null) {
 			goName = goTerm.getPreferredName();
 		}
-		File outputFile = new File("z:\\share\\Salva\\data\\PINT projects\\molecular painting\\surface_" + goName
+		final File outputFile = new File("z:\\share\\Salva\\data\\PINT projects\\molecular painting\\surface_" + goName
 				+ "_ratio_gte=" + minRatio + ".csv");
 		final File uniprotReleasesFolder = new File("z:\\share\\Salva\\data\\uniprotKB");
-		UniprotProteinLocalRetriever uplr = new UniprotProteinLocalRetriever(uniprotReleasesFolder, true);
+		final UniprotProteinLocalRetriever uplr = new UniprotProteinLocalRetriever(uniprotReleasesFolder, true);
 		UniprotProteinRetrievalSettings.getInstance(uniprotReleasesFolder, true);
-		File pdbFolder = new File("z:\\share\\Salva\\data\\pdb");
-		File experimentalDataFile = new File(
+		final File pdbFolder = new File("z:\\share\\Salva\\data\\pdb");
+		final File experimentalDataFile = new File(
 				"z:\\share\\Salva\\data\\PINT projects\\molecular painting\\experimental_proteins.csv");
 		try {
-			Set<String> psmIds = new THashSet<String>();
-			Set<String> peptideSequences = new THashSet<String>();
-			Set<String> peptideSequencesValid = new THashSet<String>();
-			Set<String> uniquePositionsValid = new THashSet<String>();
-			Set<String> proteinsWithNoPDBInformation = new THashSet<String>();
-			Set<String> totalProteins = new THashSet<String>();
-			Set<Peptide> surfacePeptides = new THashSet<Peptide>();
-			List<String> accs = FileUtils.readColumnFromTextFile(experimentalDataFile, ",", 0, true);
-			List<String> seqs = FileUtils.readColumnFromTextFile(experimentalDataFile, ",", 1, true);
-			List<String> ratios = FileUtils.readColumnFromTextFile(experimentalDataFile, ",", 2, true);
-			Map<String, Protein> surfaceProteinMap = new THashMap<String, Protein>();
-			Map<String, Entry> annotatedProteins = uplr.getAnnotatedProteins(null, accs);
+			final Set<String> psmIds = new THashSet<String>();
+			final Set<String> peptideSequences = new THashSet<String>();
+			final Set<String> peptideSequencesValid = new THashSet<String>();
+			final Set<String> uniquePositionsValid = new THashSet<String>();
+			final Set<String> proteinsWithNoPDBInformation = new THashSet<String>();
+			final Set<String> totalProteins = new THashSet<String>();
+			final Set<Peptide> surfacePeptides = new THashSet<Peptide>();
+			final List<String> accs = FileUtils.readColumnFromTextFile(experimentalDataFile, ",", 0, true);
+			final List<String> seqs = FileUtils.readColumnFromTextFile(experimentalDataFile, ",", 1, true);
+			final List<String> ratios = FileUtils.readColumnFromTextFile(experimentalDataFile, ",", 2, true);
+			final Map<String, Protein> surfaceProteinMap = new THashMap<String, Protein>();
+			final Map<String, Entry> annotatedProteins = uplr.getAnnotatedProteins(null, accs);
 
 			for (int i = 0; i < accs.size(); i++) {
 
-				Double ratio = Double.valueOf(ratios.get(i));
+				final Double ratio = Double.valueOf(ratios.get(i));
 				if (ratio >= minRatio) {
-					String acc = accs.get(i);
+					final String acc = accs.get(i);
 					if (acc.equals("P09211")) {
 						System.out.println(acc);
 					}
-					Entry entry = annotatedProteins.get(acc);
+					final Entry entry = annotatedProteins.get(acc);
 					if (entry != null) {
 						if (acc.equals("P09211")) {
 							System.out.println(acc);
 						}
-						List<String> query = JAXBXPathQuery.query(entry, "dbReference$id=" + GO, "$id");
-						boolean containsAnnotation = !query.isEmpty();
+						final List<String> query = JAXBXPathQuery.query(entry, "dbReference$id=" + GO, "$id");
+						final boolean containsAnnotation = !query.isEmpty();
 						if (filterByAnnotation && !containsAnnotation) {
 							continue;
 						}
 					}
 					totalProteins.add(acc);
-					Peptide peptide = new Peptide(seqs.get(i), ratio);
+					final Peptide peptide = new Peptide(seqs.get(i), ratio);
 					surfacePeptides.add(peptide);
 					if (surfaceProteinMap.containsKey(acc)) {
 						surfaceProteinMap.get(acc).addPeptide(peptide);
 					} else {
-						Protein protein = new Protein(acc);
+						final Protein protein = new Protein(acc);
 						protein.addPeptide(peptide);
 						surfaceProteinMap.put(acc, protein);
 					}
@@ -416,15 +418,15 @@ public class SurfaceAccesibilityTest {
 
 			}
 			System.out.println(surfaceProteinMap.size() + " proteins with experimental data");
-			char aa = 'K';
-			AtomType atomType = AtomType.NZ;
+			final char aa = 'K';
+			final AtomType atomType = AtomType.NZ;
 
-			boolean printOnlyTheMostAccessibleSite = false;
+			final boolean printOnlyTheMostAccessibleSite = false;
 
-			int psmsNoAA = 0;
-			int psmsWithAANoRatios = 0;
-			int discardedContainingMoreThanOneK = 0;
-			int validPSMs = 0;
+			final int psmsNoAA = 0;
+			final int psmsWithAANoRatios = 0;
+			final int discardedContainingMoreThanOneK = 0;
+			final int validPSMs = 0;
 
 			FileWriter fw = null;
 
@@ -435,22 +437,22 @@ public class SurfaceAccesibilityTest {
 			SurfaceCalculator calc = new SurfaceCalculator(uplr, aa, atomType, removeOtherChains, removeOtherMolecules,
 					true, pdbFolder);
 			run(surfacePeptides, surfaceProteinMap, calc, fw, peptideSequences, aa);
-			System.out.println(calc.getStatistics());
-			calc.clearStatistics();
+			System.out.println(Calculator.getStatistics());
+			Calculator.clearStatistics();
 			fw.write("\n\nremoveOtherChains=false, removeOtherMolecules=true\n\n");
 			removeOtherChains = false;
 			removeOtherMolecules = true;
 			calc = new SurfaceCalculator(uplr, aa, atomType, removeOtherChains, removeOtherMolecules, true, pdbFolder);
 			run(surfacePeptides, surfaceProteinMap, calc, fw, peptideSequences, aa);
-			System.out.println(calc.getStatistics());
-			calc.clearStatistics();
+			System.out.println(Calculator.getStatistics());
+			Calculator.clearStatistics();
 			fw.write("\n\nremoveOtherChains=false, removeOtherMolecules=false\n\n");
 			removeOtherChains = false;
 			removeOtherMolecules = false;
 			calc = new SurfaceCalculator(uplr, aa, atomType, removeOtherChains, removeOtherMolecules, true, pdbFolder);
 			run(surfacePeptides, surfaceProteinMap, calc, fw, peptideSequences, aa);
-			System.out.println(calc.getStatistics());
-			calc.clearStatistics();
+			System.out.println(Calculator.getStatistics());
+			Calculator.clearStatistics();
 			fw.write("\n\n\n\n\n");
 			fw.write(psmIds.size() + " PSMs in total\n");
 			fw.write(validPSMs + " PSMs valid (containing quantitative information)\n");
@@ -464,7 +466,7 @@ public class SurfaceAccesibilityTest {
 			fw.write(totalProteins.size() + " total different proteins\n");
 			fw.write(proteinsWithNoPDBInformation.size() + " proteins with no PDB information\n");
 			fw.close();
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			e.printStackTrace();
 			fail();
 		}
@@ -472,24 +474,24 @@ public class SurfaceAccesibilityTest {
 
 	@Test
 	public void filterProteinsByAnnotations() {
-		File experimentalDataFile = new File(
+		final File experimentalDataFile = new File(
 				"z:\\share\\Salva\\data\\PINT projects\\molecular painting\\accessible_experimental_proteins.csv");
 		try {
-			List<String> accs = FileUtils.readColumnFromTextFile(experimentalDataFile, ",", 0, true);
+			final List<String> accs = FileUtils.readColumnFromTextFile(experimentalDataFile, ",", 0, true);
 
 			final File uniprotReleasesFolder = new File("z:\\share\\Salva\\data\\uniprotKB");
-			UniprotProteinLocalRetriever uplr = new UniprotProteinLocalRetriever(uniprotReleasesFolder, true);
+			final UniprotProteinLocalRetriever uplr = new UniprotProteinLocalRetriever(uniprotReleasesFolder, true);
 			UniprotProteinRetrievalSettings.getInstance(uniprotReleasesFolder, true);
-			Map<String, Entry> annotatedProteins = uplr.getAnnotatedProteins(null, accs);
-			for (String acc : accs) {
-				Entry entry = annotatedProteins.get(acc);
+			final Map<String, Entry> annotatedProteins = uplr.getAnnotatedProteins(null, accs);
+			for (final String acc : accs) {
+				final Entry entry = annotatedProteins.get(acc);
 				if (entry != null) {
-					List<String> query = JAXBXPathQuery.query(entry, "dbReference$id=GO:0003677", "$id");
-					boolean containsAnnotation = !query.isEmpty();
+					final List<String> query = JAXBXPathQuery.query(entry, "dbReference$id=GO:0003677", "$id");
+					final boolean containsAnnotation = !query.isEmpty();
 					System.out.println(acc + "\t" + containsAnnotation);
 				}
 			}
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			e.printStackTrace();
 		}
 	}
@@ -497,13 +499,13 @@ public class SurfaceAccesibilityTest {
 	private void run(Collection<Peptide> surfacePeptides, Map<String, Protein> surfaceProteinMap,
 			SurfaceCalculator calc, FileWriter fw, Set<String> peptideSequences, char aa) throws IOException {
 		printHeader(fw, null);
-		SurfaceProteinReportManager manager = new SurfaceProteinReportManager(calc);
+		final SurfaceProteinReportManager manager = new SurfaceProteinReportManager(calc);
 		manager.setCalculateIfNotPresent(true);
 		final Map<String, SurfaceProteinReport> surfaceAccesibilityFromProteins = manager
 				.getReportsFromProteins(surfaceProteinMap.values());
 		System.out.println(
 				surfaceAccesibilityFromProteins.size() + " reports for " + surfaceProteinMap.size() + " proteins");
-		for (Peptide surfacePeptide : surfacePeptides) {
+		for (final Peptide surfacePeptide : surfacePeptides) {
 			final String peptideSequence = surfacePeptide.getSequence();
 
 			peptideSequences.add(peptideSequence);
@@ -516,12 +518,13 @@ public class SurfaceAccesibilityTest {
 				continue;
 			}
 
-			Set<String> proteinAccs = getSurfaceProteinAccessions(surfacePeptide.getProteins());
-			for (String acc : proteinAccs) {
+			final Set<String> proteinAccs = getSurfaceProteinAccessions(surfacePeptide.getProteins());
+			for (final String acc : proteinAccs) {
 				if (surfaceAccesibilityFromProteins.containsKey(acc)) {
 					final SurfaceProteinReport surfaceAccesibilityProteinReport = surfaceAccesibilityFromProteins
 							.get(acc);
-					RatioEx ratio = new RatioEx(surfacePeptide.getRatio(), null, null, "ratio", AggregationLevel.PSM);
+					final Ratio ratio = new RatioEx(surfacePeptide.getRatio(), null, null, "ratio",
+							AggregationLevel.PSM);
 					ProteinReportWriter.printReportForPsm(fw, ratio, String.valueOf(surfacePeptide.hashCode()),
 							peptideSequence, surfaceAccesibilityProteinReport, aa, false);
 				}
@@ -533,13 +536,13 @@ public class SurfaceAccesibilityTest {
 
 	private List<Protein> filterDNABindingProteins(Set<Protein> proteinAccs, UniprotProteinLocalRetriever uplr) {
 
-		List<Protein> ret = new ArrayList<Protein>();
-		File dnaBindingProteins = new File(
+		final List<Protein> ret = new ArrayList<Protein>();
+		final File dnaBindingProteins = new File(
 				"z:\\share\\Salva\\data\\PINT projects\\molecular painting\\DNABindingProteins.csv");
 		try {
 			FileWriter fw = null;
 
-			Set<String> accs = new THashSet<String>();
+			final Set<String> accs = new THashSet<String>();
 			if (dnaBindingProteins.exists()) {
 				accs.addAll(Files.lines(Paths.get(dnaBindingProteins.toURI())).collect(Collectors.toSet()));
 
@@ -547,15 +550,16 @@ public class SurfaceAccesibilityTest {
 
 			fw = new FileWriter(dnaBindingProteins, true);
 
-			ProgressCounter counter = new ProgressCounter(proteinAccs.size(), ProgressPrintingType.PERCENTAGE_STEPS, 1);
-			for (Protein surfaceProtein : proteinAccs) {
+			final ProgressCounter counter = new ProgressCounter(proteinAccs.size(),
+					ProgressPrintingType.PERCENTAGE_STEPS, 1);
+			for (final Protein surfaceProtein : proteinAccs) {
 				counter.increment();
-				String printIfNecessary = counter.printIfNecessary();
+				final String printIfNecessary = counter.printIfNecessary();
 				if (!"".equals(printIfNecessary)) {
 					System.out.println(printIfNecessary);
 				}
 				boolean accessibleRatio = false;
-				for (Peptide peptide : surfaceProtein.getPeptides()) {
+				for (final Peptide peptide : surfaceProtein.getPeptides()) {
 					if (peptide.getRatio() > 0) {
 						accessibleRatio = true;
 					}
@@ -567,10 +571,10 @@ public class SurfaceAccesibilityTest {
 				if (accs.contains(surfaceProtein.getAcc())) {
 					ret.add(surfaceProtein);
 				} else {
-					Map<String, Entry> annotatedProtein = uplr.getAnnotatedProtein(null, surfaceProtein.getAcc());
+					final Map<String, Entry> annotatedProtein = uplr.getAnnotatedProtein(null, surfaceProtein.getAcc());
 					if (annotatedProtein.containsKey(surfaceProtein.getAcc())) {
-						Entry entry = annotatedProtein.get(surfaceProtein.getAcc());
-						List<String> query = JAXBXPathQuery.query(entry, "dbReference$id=GO:0003677", "$id");
+						final Entry entry = annotatedProtein.get(surfaceProtein.getAcc());
+						final List<String> query = JAXBXPathQuery.query(entry, "dbReference$id=GO:0003677", "$id");
 						if (!query.isEmpty()) {
 							if (fw != null) {
 								fw.write(surfaceProtein.getAcc() + "\n");
@@ -586,7 +590,7 @@ public class SurfaceAccesibilityTest {
 			if (fw != null) {
 				fw.close();
 			}
-		} catch (IOException e) {
+		} catch (final IOException e) {
 
 		}
 		return ret;
@@ -595,19 +599,20 @@ public class SurfaceAccesibilityTest {
 	@Test
 	public void surfaceAccesibilityFromRemoteFilesMaxPerSite() {
 
-		File outputFile = new File(
+		final File outputFile = new File(
 				"z:\\share\\Salva\\data\\PINT projects\\molecular painting\\C_max_per_site_surface.csv");
 		final File uniprotReleasesFolder = new File("z:\\share\\Salva\\data\\uniprotKB");
-		UniprotProteinLocalRetriever uplr = new UniprotProteinLocalRetriever(uniprotReleasesFolder, true);
+		final UniprotProteinLocalRetriever uplr = new UniprotProteinLocalRetriever(uniprotReleasesFolder, true);
 		UniprotProteinRetrievalSettings.getInstance(uniprotReleasesFolder, true);
-		File pdbFolder = new File("z:\\share\\Salva\\data\\pdb");
-		File fastaIndexFolder = new File("C:\\Users\\Salva\\Desktop\\tmp\\Pint\\fasta");
-		File projectConfigFile = new File("z:\\share\\Salva\\data\\PINT projects\\molecular painting\\HS_Hek293.xml");
-		ImportCfgFileReader cfgReader = new ImportCfgFileReader();
+		final File pdbFolder = new File("z:\\share\\Salva\\data\\pdb");
+		final File fastaIndexFolder = new File("C:\\Users\\Salva\\Desktop\\tmp\\Pint\\fasta");
+		final File projectConfigFile = new File(
+				"z:\\share\\Salva\\data\\PINT projects\\molecular painting\\HS_Hek293.xml");
+		final ImportCfgFileReader cfgReader = new ImportCfgFileReader();
 
 		final Project project = cfgReader.getProjectFromCfgFile(projectConfigFile, fastaIndexFolder);
-		char aa = 'K';
-		AtomType atomType = AtomType.NZ;
+		final char aa = 'K';
+		final AtomType atomType = AtomType.NZ;
 		int psmsNoAA = 0;
 		int psmsWithAANoRatios = 0;
 		int discardedContainingMoreThanOneK = 0;
@@ -616,29 +621,29 @@ public class SurfaceAccesibilityTest {
 		try {
 			fw = new FileWriter(outputFile);
 
-			SurfaceCalculator calc = new SurfaceCalculator(uplr, aa, atomType, removeOtherChains, removeOtherMolecules,
-					true, pdbFolder);
-			Set<Protein> proteinAccs = getProteinAccsFromProject(project);
-			List<String> ratioScoreNames = getRatioScoreNamesFromProject(project);
+			final SurfaceCalculator calc = new SurfaceCalculator(uplr, aa, atomType, removeOtherChains,
+					removeOtherMolecules, true, pdbFolder);
+			final Set<Protein> proteinAccs = getProteinAccsFromProject(project);
+			final List<String> ratioScoreNames = getRatioScoreNamesFromProject(project);
 			printHeader(fw, ratioScoreNames);
-			SurfaceProteinReportManager manager = new SurfaceProteinReportManager(calc);
+			final SurfaceProteinReportManager manager = new SurfaceProteinReportManager(calc);
 			// everything is already calculated, so not go for it if not present
 			manager.setCalculateIfNotPresent(false);
 			final Map<String, SurfaceProteinReport> surfaceAccesibilityFromProteins = manager
 					.getReportsFromProteins(proteinAccs);
-			Set<String> psmIds = new THashSet<String>();
-			Set<String> peptideSequences = new THashSet<String>();
-			Set<String> peptideSequencesValid = new THashSet<String>();
-			Set<String> uniquePositionsValid = new THashSet<String>();
-			Set<String> proteinsWithNoPDBInformation = new THashSet<String>();
-			Set<String> totalProteins = new THashSet<String>();
+			final Set<String> psmIds = new THashSet<String>();
+			final Set<String> peptideSequences = new THashSet<String>();
+			final Set<String> peptideSequencesValid = new THashSet<String>();
+			final Set<String> uniquePositionsValid = new THashSet<String>();
+			final Set<String> proteinsWithNoPDBInformation = new THashSet<String>();
+			final Set<String> totalProteins = new THashSet<String>();
 			final Set<Condition> conditions = project.getConditions();
-			for (Condition condition : conditions) {
+			for (final Condition condition : conditions) {
 				if (condition.getName().startsWith("HS")) {
 					continue;
 				}
 				final Set<PSM> psMs = condition.getPSMs();
-				for (PSM psm : psMs) {
+				for (final PSM psm : psMs) {
 					final String peptideSequence = psm.getSequence();
 
 					peptideSequences.add(peptideSequence);
@@ -654,7 +659,7 @@ public class SurfaceAccesibilityTest {
 							continue;
 						}
 						Ratio ratio = null;
-						for (Ratio ratio2 : psm.getRatios()) {
+						for (final Ratio ratio2 : psm.getRatios()) {
 							if (ratio2.getDescription().equals("AREA_RATIO")) {
 								ratio = ratio2;
 							}
@@ -665,15 +670,15 @@ public class SurfaceAccesibilityTest {
 						}
 						validPSMs++;
 
-						Set<String> accs = getProteinAccessions(psm.getProteins());
+						final Set<String> accs = getProteinAccessions(psm.getProteins());
 						totalProteins.addAll(accs);
-						for (String acc : accs) {
+						for (final String acc : accs) {
 							if (surfaceAccesibilityFromProteins.containsKey(acc)) {
 								peptideSequencesValid.add(peptideSequence);
 								final SurfaceProteinReport surfaceAccesibilityProteinReport = surfaceAccesibilityFromProteins
 										.get(acc);
-								ProteinReportWriter.printReportForPsm(fw, ratio, psm.getIdentifier(),
-										peptideSequence, surfaceAccesibilityProteinReport, aa, true);
+								ProteinReportWriter.printReportForPsm(fw, ratio, psm.getIdentifier(), peptideSequence,
+										surfaceAccesibilityProteinReport, aa, true);
 								final List<String> uniquePositionsInProteinKeys = surfaceAccesibilityProteinReport
 										.getUniquePositionsInProteinKeys();
 								uniquePositionsValid.addAll(uniquePositionsInProteinKeys);
@@ -697,26 +702,26 @@ public class SurfaceAccesibilityTest {
 			fw.write(totalProteins.size() + " total different proteins\n");
 			fw.write(proteinsWithNoPDBInformation.size() + " proteins with no PDB information\n");
 			fw.close();
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			e.printStackTrace();
 			fail();
 		}
 	}
 
 	private void printHeader(FileWriter fw, List<String> ratioScoreNames) throws IOException {
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		sb.append("ACC").append("\t").append("PSMID").append("\t").append("SEQ").append("\t")
 				.append("Position in peptide").append("\t").append(JMolAtomReport.getStaticHeaders()).append("\t")
 				.append("AREA_RATIO").append("\t");
 		if (ratioScoreNames != null && !ratioScoreNames.isEmpty()) {
-			for (String ratioScoreName : ratioScoreNames) {
+			for (final String ratioScoreName : ratioScoreNames) {
 				sb.append(ratioScoreName).append("\t");
 			}
 		}
 
 		sb.append("RATIO").append("\t");
 		if (ratioScoreNames != null) {
-			for (String ratioScoreName : ratioScoreNames) {
+			for (final String ratioScoreName : ratioScoreNames) {
 				sb.append(ratioScoreName).append("\t");
 			}
 		}
@@ -725,32 +730,32 @@ public class SurfaceAccesibilityTest {
 	}
 
 	private Set<String> getProteinAccessions(Set<edu.scripps.yates.utilities.proteomicsmodel.Protein> proteins) {
-		Set<String> proteinAccessionsFromAccessions = new THashSet<String>();
+		final Set<String> proteinAccessionsFromAccessions = new THashSet<String>();
 
-		for (edu.scripps.yates.utilities.proteomicsmodel.Protein protein : proteins) {
+		for (final edu.scripps.yates.utilities.proteomicsmodel.Protein protein : proteins) {
 			proteinAccessionsFromAccessions.add(protein.getAccession());
 		}
 		return proteinAccessionsFromAccessions;
 	}
 
 	private Set<String> getSurfaceProteinAccessions(Set<Protein> proteins) {
-		Set<String> proteinAccessionsFromAccessions = new THashSet<String>();
+		final Set<String> proteinAccessionsFromAccessions = new THashSet<String>();
 
-		for (Protein protein : proteins) {
+		for (final Protein protein : proteins) {
 			proteinAccessionsFromAccessions.add(protein.getAcc());
 		}
 		return proteinAccessionsFromAccessions;
 	}
 
 	private Set<Protein> getProteinAccsFromProject(Project project) {
-		Set<Protein> proteinAccessionsFromProject = new THashSet<Protein>();
+		final Set<Protein> proteinAccessionsFromProject = new THashSet<Protein>();
 		final Set<Condition> conditions = project.getConditions();
-		Map<String, Peptide> surfacePeptideMap = new THashMap<String, Peptide>();
-		for (Condition condition : conditions) {
+		final Map<String, Peptide> surfacePeptideMap = new THashMap<String, Peptide>();
+		for (final Condition condition : conditions) {
 			final Set<edu.scripps.yates.utilities.proteomicsmodel.Protein> proteins = condition.getProteins();
-			for (edu.scripps.yates.utilities.proteomicsmodel.Protein protein : proteins) {
-				Protein surfaceProtein = new Protein(FastaParser.getUniProtACC(protein.getAccession()));
-				for (PSM psm : protein.getPSMs()) {
+			for (final edu.scripps.yates.utilities.proteomicsmodel.Protein protein : proteins) {
+				final Protein surfaceProtein = new Protein(FastaParser.getUniProtACC(protein.getAccession()));
+				for (final PSM psm : protein.getPSMs()) {
 					if (psm.getRatios() != null && !psm.getRatios().isEmpty()) {
 						Peptide surfacePeptide = null;
 						if (surfacePeptideMap.containsKey(psm.getIdentifier())) {
@@ -769,14 +774,14 @@ public class SurfaceAccesibilityTest {
 	}
 
 	private List<String> getRatioScoreNamesFromProject(Project project) {
-		Set<String> ret = new THashSet<String>();
+		final Set<String> ret = new THashSet<String>();
 		final Set<Condition> conditions = project.getConditions();
-		for (Condition condition : conditions) {
+		for (final Condition condition : conditions) {
 			final Set<PSM> psms = condition.getPSMs();
-			for (PSM psm : psms) {
+			for (final PSM psm : psms) {
 				final Set<Ratio> ratios = psm.getRatios();
 				if (ratios != null) {
-					for (Ratio ratio : ratios) {
+					for (final Ratio ratio : ratios) {
 						if (ratio.getAssociatedConfidenceScore() != null) {
 							ret.add(ratio.getAssociatedConfidenceScore().getScoreName());
 						}
@@ -784,7 +789,7 @@ public class SurfaceAccesibilityTest {
 				}
 			}
 		}
-		List<String> ratioScoreNames = new ArrayList<String>();
+		final List<String> ratioScoreNames = new ArrayList<String>();
 		ratioScoreNames.addAll(ret);
 		Collections.sort(ratioScoreNames);
 		return ratioScoreNames;
@@ -792,20 +797,20 @@ public class SurfaceAccesibilityTest {
 
 	@Test
 	public void getSurfaceAccebilityFromPDBSites() {
-		UniprotProteinLocalRetriever uplr = new UniprotProteinLocalRetriever(
+		final UniprotProteinLocalRetriever uplr = new UniprotProteinLocalRetriever(
 				new File("z:\\share\\Salva\\data\\uniprotKB"), true);
-		File pdbFolder = new File("z:\\share\\Salva\\data\\pdb");
+		final File pdbFolder = new File("z:\\share\\Salva\\data\\pdb");
 
-		char aa = 'K';
-		AtomType atomType = AtomType.NZ;
-		String protein = "5A5T";
-		String chain = null;
-		SurfaceCalculator calc = new SurfaceCalculator(uplr, aa, atomType, removeOtherChains, removeOtherMolecules,
-				true, pdbFolder);
+		final char aa = 'K';
+		final AtomType atomType = AtomType.NZ;
+		final String protein = "5A5T";
+		final String chain = null;
+		final SurfaceCalculator calc = new SurfaceCalculator(uplr, aa, atomType, removeOtherChains,
+				removeOtherMolecules, true, pdbFolder);
 		final SurfaceProteinReport surfaceAccesibilityProteinReport = calc.getReportFromPDBModel(protein, chain);
 		final List<SurfaceReport> reports = surfaceAccesibilityProteinReport.getReports();
 		boolean first = true;
-		for (SurfaceReport report : reports) {
+		for (final SurfaceReport report : reports) {
 			if (first) {
 				System.out.println(report.getToStringHeaders());
 				first = false;

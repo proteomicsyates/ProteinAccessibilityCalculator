@@ -14,15 +14,15 @@ import org.apache.log4j.Logger;
 import com.compomics.dbtoolkit.io.implementations.FASTADBLoader;
 import com.compomics.dbtoolkit.io.interfaces.Filter;
 
-import edu.scripps.yates.dbindex.DBIndexInterface;
-import edu.scripps.yates.dbindex.DBIndexStoreException;
-import edu.scripps.yates.dbindex.IndexedProtein;
+import edu.scripps.yates.dbindex.DBIndexImpl;
 import edu.scripps.yates.dbindex.util.FastaDigestionConfiguration;
 import edu.scripps.yates.dbindex.util.PeptideNotFoundInDBIndexException;
 import edu.scripps.yates.pdb.model.Peptide;
 import edu.scripps.yates.pdb.model.Protein;
 import edu.scripps.yates.utilities.dates.DatesUtil;
 import edu.scripps.yates.utilities.fasta.FastaParser;
+import edu.scripps.yates.utilities.fasta.dbindex.DBIndexStoreException;
+import edu.scripps.yates.utilities.fasta.dbindex.IndexedProtein;
 import edu.scripps.yates.utilities.files.FileUtils;
 import edu.scripps.yates.utilities.progresscounter.ProgressCounter;
 import edu.scripps.yates.utilities.progresscounter.ProgressPrintingType;
@@ -94,10 +94,10 @@ public class InputFileReader {
 				}
 			} else {
 				if (fastaDigestion.getEnzymeArray() != null) {
-					final DBIndexInterface dbindex = FastaDigestionConfiguration.getFastaDBIndex(fastaDigestion);
+					final DBIndexImpl dbindex = FastaDigestionConfiguration.getFastaDBIndex(fastaDigestion);
 					for (row = 0; row < peptideSequences.size(); row++) {
 
-						final String sequence = peptideSequences.get(row);
+						String sequence = peptideSequences.get(row);
 						Double ratio = null;
 						if (peptideRatios != null) {
 							ratioString = peptideRatios.get(row);
@@ -110,6 +110,13 @@ public class InputFileReader {
 							}
 						}
 						// remove Ptms or pre and post peptide characteres
+						// if the peptide is a peptide node it could have several peptide sequences
+						// referring to the same quantitation site
+						// so we need to know if contains several sequences and in that case, just take
+						// one
+						if (sequence.contains("_")) {
+							sequence = sequence.split("_")[0];
+						}
 						final String cleanSequence = FastaParser.cleanSequence(sequence);
 						final Set<IndexedProtein> proteins = dbindex.getProteins(cleanSequence);
 						if (proteins == null || proteins.isEmpty()) {
@@ -262,7 +269,7 @@ public class InputFileReader {
 			if (!"".equals(printIfNecessary)) {
 				log.info(printIfNecessary + " entries loaded");
 			}
-			final String acc = FastaParser.getACC(protein.split("\n")[0]).getFirstelement();
+			final String acc = FastaParser.getACC(protein.split("\n")[0]).getAccession();
 			final String sequence = protein.substring(protein.indexOf("\n") + 1);
 			map.put(sequence, acc);
 		}

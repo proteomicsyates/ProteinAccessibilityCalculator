@@ -5,9 +5,9 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import edu.scripps.yates.annotations.uniprot.xml.DbReferenceType;
-import edu.scripps.yates.annotations.uniprot.xml.PropertyType;
 import edu.scripps.yates.pdb.model.DBRef;
+import edu.scripps.yates.utilities.annotations.uniprot.xml.DbReferenceType;
+import edu.scripps.yates.utilities.annotations.uniprot.xml.PropertyType;
 import gnu.trove.set.hash.THashSet;
 
 public class PDBUtil {

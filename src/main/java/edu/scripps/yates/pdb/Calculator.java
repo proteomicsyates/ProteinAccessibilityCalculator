@@ -14,8 +14,6 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import edu.scripps.yates.annotations.uniprot.UniprotProteinLocalRetriever;
-import edu.scripps.yates.annotations.uniprot.xml.DbReferenceType;
-import edu.scripps.yates.annotations.uniprot.xml.Entry;
 import edu.scripps.yates.dbindex.util.DigestionConfiguration;
 import edu.scripps.yates.pdb.model.Atom3D;
 import edu.scripps.yates.pdb.model.AtomType;
@@ -28,10 +26,13 @@ import edu.scripps.yates.pdb.read.PDBParserManager;
 import edu.scripps.yates.pdb.read.PDBUtil;
 import edu.scripps.yates.pdb.util.InputParameters;
 import edu.scripps.yates.pdb.util.JMolCommandsUtil;
+import edu.scripps.yates.utilities.annotations.uniprot.xml.DbReferenceType;
+import edu.scripps.yates.utilities.annotations.uniprot.xml.Entry;
 import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.maths.Maths;
+import edu.scripps.yates.utilities.proteomicsmodel.Accession;
+import edu.scripps.yates.utilities.proteomicsmodel.enums.AccessionType;
 import edu.scripps.yates.utilities.strings.StringUtils;
-import edu.scripps.yates.utilities.util.Pair;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.THashMap;
@@ -104,8 +105,7 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 	}
 
 	/**
-	 * @param createImages
-	 *            the createImages to set
+	 * @param createImages the createImages to set
 	 */
 	public void setCreateImages(boolean createImages) {
 		this.createImages = createImages;
@@ -114,9 +114,9 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 	protected Map<String, R> getReportFromProteins(Collection<Protein> proteins) {
 		final Set<String> uniprotAccs = new THashSet<String>();
 		for (final Protein protein : proteins) {
-			final Pair<String, String> acc = FastaParser.getACC(protein.getAcc());
-			if (acc != null && acc.getSecondElement().equals("UNIPROT")) {
-				uniprotAccs.add(acc.getFirstelement());
+			final Accession acc = FastaParser.getACC(protein.getAcc());
+			if (acc != null && acc.getAccessionType() == AccessionType.UNIPROT) {
+				uniprotAccs.add(acc.getAccession());
 			}
 		}
 		final Map<String, R> ret = new THashMap<String, R>();

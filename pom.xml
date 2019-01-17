@@ -78,12 +78,22 @@
 	          <artifactId>xxindex</artifactId>
 	          <groupId>lennart</groupId>
 	        </exclusion>
-	      </exclusions>
+	        <exclusion>
+	        	<groupId>org.slf4j</groupId>
+	        	<artifactId>slf4j-log4j12</artifactId>
+	        </exclusion>
+  		</exclusions>
   	</dependency>
   	<dependency>
   		<groupId>edu.scripps.yates</groupId>
   		<artifactId>pint.annotations</artifactId>
   		<version>1.0.2-SNAPSHOT</version>
+  		<exclusions>
+  			<exclusion>
+  				<groupId>ch.qos.logback</groupId>
+  				<artifactId>logback-classic</artifactId>
+  			</exclusion>
+  		</exclusions>
   	</dependency>
   	<dependency>
   		<groupId>edu.scripps.yates</groupId>

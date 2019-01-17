@@ -14,8 +14,8 @@ import gnu.trove.list.array.TIntArrayList;
 
 public class ProteinReportWriter {
 	/**
-	 * Print in a file the information of a surface accessibility sites present
-	 * in a particular peptide of a protein
+	 * Print in a file the information of a surface accessibility sites present in a
+	 * particular peptide of a protein
 	 *
 	 * @param fw
 	 * @param accession
@@ -66,8 +66,8 @@ public class ProteinReportWriter {
 	}
 
 	/**
-	 * Print in a file the information of a surface accessibility sites present
-	 * in a particular peptide of a protein
+	 * Print in a file the information of a surface accessibility sites present in a
+	 * particular peptide of a protein
 	 *
 	 * @param fw
 	 * @param proteinReport
@@ -84,8 +84,8 @@ public class ProteinReportWriter {
 	}
 
 	/**
-	 * Print in a file the information of a surface accessibility sites present
-	 * in a particular peptide of a protein
+	 * Print in a file the information of a surface accessibility sites present in a
+	 * particular peptide of a protein
 	 *
 	 * @param fw
 	 * @param accession
@@ -97,7 +97,7 @@ public class ProteinReportWriter {
 	 * @param b
 	 * @throws IOException
 	 */
-	public static void printReportForPeptide(Writer fw, Peptide peptide, ProteinReport proteinReport, String aa,
+	public static void printReportForPeptide(Writer fw, Peptide peptide, ProteinReport proteinReport, char aa,
 			boolean printOnlyTheMostAccessibleSite) throws IOException {
 		final String uniprotProteinSequence = proteinReport.getUniprotProteinSequence();
 		final int positionOfPeptideInProtein = uniprotProteinSequence.indexOf(peptide.getSequence());
@@ -109,7 +109,7 @@ public class ProteinReportWriter {
 			if (reports != null) {
 				if (!printOnlyTheMostAccessibleSite) {
 					for (final JMolAtomReport surfaceAccessibilityReport : reports) {
-						printReportForSite(fw, peptide, positionOfAAInPeptide, aa, surfaceAccessibilityReport);
+						printReportForSite(fw, peptide, positionOfAAInPeptide, surfaceAccessibilityReport);
 					}
 				} else {
 					JMolAtomReport bestReport = null;
@@ -126,15 +126,15 @@ public class ProteinReportWriter {
 							throw new UnsupportedOperationException("not implemented yet");
 						}
 					}
-					printReportForSite(fw, peptide, positionOfAAInPeptide, aa, bestReport);
+					printReportForSite(fw, peptide, positionOfAAInPeptide, bestReport);
 				}
 			}
 		}
 
 	}
 
-	private static void printReportForSite(Writer fw, Peptide peptide, int positionOfAAInPeptide, String aa,
-			JMolAtomReport report) throws IOException {
+	private static void printReportForSite(Writer fw, Peptide peptide, int positionOfAAInPeptide, JMolAtomReport report)
+			throws IOException {
 		final StringBuilder sb = new StringBuilder();
 		sb.append(peptide.getSequence()).append("\t").append(positionOfAAInPeptide).append("\t");
 

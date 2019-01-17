@@ -95,7 +95,7 @@ public class Main {
 				}
 			}
 
-			final String pdbFolderString = PropertiesReader.getPropertyValue(PropertiesReader.PDB_FOLDER);
+			final String pdbFolderString = PropertiesReader.getPropertyValue(PropertiesReader.PDB_FOLDER).trim();
 			final File parentPDBFolder = new File(pdbFolderString);
 
 			if (calculationType == CalculationType.PDB_SURFACE) {
@@ -274,23 +274,26 @@ public class Main {
 				writer.write(ProteinReportWriter.getPeptideReportHeader(JMolAtomReport.getStaticHeaders()) + "\n");
 				counter = new ProgressCounter(proteins.size(), ProgressPrintingType.PERCENTAGE_STEPS, 0);
 				distanceCalculator.getUplr().getAnnotatedProteins(uniprotVersion, proteins.keySet());
-				for (final Protein protein : proteins.values()) {
-					final DistanceProteinReport proteinReport = distanceCalculator.getReportFromProtein(protein, null,
-							null);
-					counter.increment();
-					final String percentage = counter.printIfNecessary();
-					if (percentage != null && !"".equals(percentage)) {
-						log.info(percentage);
-					}
-					if (proteinReport == null) {
-						log.info("No info for protein " + protein.getAcc());
-						continue;
-					}
-					final Set<Peptide> peptides = protein.getPeptides();
-					for (final Peptide peptide : peptides) {
 
-						ProteinReportWriter.printReportForPeptide(writer, peptide, proteinReport, aaAndAtomTypeString,
-								false);
+				for (final Protein protein : proteins.values()) {
+					counter.increment();
+					for (final char aa : atomTypeMap.keySet()) {
+						final DistanceProteinReport proteinReport = distanceCalculator.getReportFromProtein(protein,
+								null, null);
+
+						final String percentage = counter.printIfNecessary();
+						if (percentage != null && !"".equals(percentage)) {
+							log.info(percentage);
+						}
+						if (proteinReport == null) {
+							log.info("No info for protein " + protein.getAcc());
+							continue;
+						}
+						final Set<Peptide> peptides = protein.getPeptides();
+						for (final Peptide peptide : peptides) {
+
+							ProteinReportWriter.printReportForPeptide(writer, peptide, proteinReport, aa, false);
+						}
 					}
 				}
 				break;
@@ -310,22 +313,25 @@ public class Main {
 				writer.write(ProteinReportWriter.getPeptideReportHeader(JMolAtomReport.getStaticHeaders()) + "\n");
 				counter = new ProgressCounter(proteins.size(), ProgressPrintingType.PERCENTAGE_STEPS, 0);
 				surfaceCalculator.getUplr().getAnnotatedProteins(null, proteins.keySet());
+
 				for (final Protein protein : proteins.values()) {
 					counter.increment();
-					final SurfaceProteinReport surfaceAccesibilityFromProtein = surfaceCalculator
-							.getReportFromProtein(protein, null, null);
-					final String percentage = counter.printIfNecessary();
-					if (percentage != null && !"".equals(percentage)) {
-						log.info(percentage);
-					}
-					if (surfaceAccesibilityFromProtein == null) {
-						log.info("No info for protein " + protein.getAcc());
-						continue;
-					}
-					final Set<Peptide> peptides = protein.getPeptides();
-					for (final Peptide peptide : peptides) {
-						ProteinReportWriter.printReportForPeptide(writer, peptide, surfaceAccesibilityFromProtein,
-								aaAndAtomTypeString, false);
+					for (final char aa : atomTypeMap.keySet()) {
+						final SurfaceProteinReport surfaceAccesibilityFromProtein = surfaceCalculator
+								.getReportFromProtein(protein, null, null);
+						final String percentage = counter.printIfNecessary();
+						if (percentage != null && !"".equals(percentage)) {
+							log.info(percentage);
+						}
+						if (surfaceAccesibilityFromProtein == null) {
+							log.info("No info for protein " + protein.getAcc());
+							continue;
+						}
+						final Set<Peptide> peptides = protein.getPeptides();
+						for (final Peptide peptide : peptides) {
+							ProteinReportWriter.printReportForPeptide(writer, peptide, surfaceAccesibilityFromProtein,
+									aa, false);
+						}
 					}
 				}
 				break;

@@ -47,7 +47,7 @@ public class PDBParser {
 	private String selectedChainID;
 	private String experimentalMethod;
 	private Boolean mutation;
-	private Map<String, List<String>> linesMap = new HashMap<String, List<String>>();
+	private final Map<String, List<String>> linesMap = new HashMap<String, List<String>>();
 	private ArrayList<DBRef> dbRefs;
 	private final boolean parseCoordinates;
 	private final Map<String, Map<AtomType, List<Atom3D>>> atomsByAminoacidAndType = new HashMap<String, Map<AtomType, List<Atom3D>>>();
@@ -104,7 +104,7 @@ public class PDBParser {
 		if (atomsByAAPosition == null) {
 			return null;
 		}
-		for (Atom3D atom : atomsByAAPosition) {
+		for (final Atom3D atom : atomsByAAPosition) {
 			if (atom.getPositionInPDB() == positionInPDB && atom.getChainID().equals(chainID)
 					&& atom.getAa().equals(String.valueOf(aa)) && atom.getAtomType() == atomType) {
 				return atom;
@@ -124,7 +124,7 @@ public class PDBParser {
 		// init(false);
 		// }
 		// executeCommands(JMolCommandsUtil.getSelectAtomScript(atom));
-		String strOutput = executeCommands(JMolCommandsUtil.getCalculateSurfaceScript(atom));
+		final String strOutput = executeCommands(JMolCommandsUtil.getCalculateSurfaceScript(atom));
 
 		return parseAccessibilityOutput(strOutput);
 	}
@@ -134,7 +134,7 @@ public class PDBParser {
 
 		log.info("Executing JMol command set:" + commandSet.getCommandsToExecuteIndifferentLines());
 		// getViewer().evalString(commandSet.getCommandsToExecute());
-		String strOutput = (String) getViewer().scriptWaitStatus(commandSet.getCommandsToExecute(), null);
+		final String strOutput = (String) getViewer().scriptWaitStatus(commandSet.getCommandsToExecute(), null);
 		if (!"".equals(strOutput)) {
 			log.debug("Output of the command in JMol is " + strOutput);
 		}
@@ -142,10 +142,10 @@ public class PDBParser {
 	}
 
 	private Double parseAccessibilityOutput(String strOutput) {
-		List<String> lines = new ArrayList<String>();
+		final List<String> lines = new ArrayList<String>();
 		if (strOutput.contains("\n")) {
 			final String[] split = strOutput.split("\n");
-			for (String string : split) {
+			for (final String string : split) {
 				lines.add(string);
 			}
 		} else {
@@ -165,7 +165,7 @@ public class PDBParser {
 					if (s.contains(",")) {
 						final String[] numberArray = s.split(",");
 						double total = 0.0;
-						for (String string : numberArray) {
+						for (final String string : numberArray) {
 							total += Double.valueOf(string);
 						}
 						return total;
@@ -185,16 +185,16 @@ public class PDBParser {
 			// if (!getLinesContaining(CA_ATOMS_ONLY).isEmpty()) {
 			// return atomList;
 			// }
-			Set<String> chainsReaded = new HashSet<String>();
+			final Set<String> chainsReaded = new HashSet<String>();
 			log.info("Reading PDB file...");
-			List<String> lines = getLinesStarting(ATOM);
+			final List<String> lines = getLinesStarting(ATOM);
 			log.info("Parsing " + lines.size() + " ATOM lines");
-			for (String string : lines) {
+			for (final String string : lines) {
 				try {
 
-					Atom3D atom = new Atom3D(string, parseCoordinates);
+					final Atom3D atom = new Atom3D(string, parseCoordinates);
 					if (!chainsReaded.contains(atom.getChainID())) {
-						log.info(atom.getChainID() + " chain ");
+						log.debug(atom.getChainID() + " chain ");
 						chainsReaded.add(atom.getChainID());
 					}
 					if (!atomsByAminoacidAndType.containsKey(atom.getAa())) {
@@ -209,9 +209,9 @@ public class PDBParser {
 					// }
 					// atom.setPositionInPDB(position);
 					atomList.add(atom);
-				} catch (IllegalArgumentException e) {
+				} catch (final IllegalArgumentException e) {
 					log.debug(e);
-				} catch (Exception e) {
+				} catch (final Exception e) {
 					log.debug(e);
 				}
 			}
@@ -224,12 +224,12 @@ public class PDBParser {
 		if (atomsByPosition == null) {
 			atomsByPosition = new TIntObjectHashMap<List<Atom3D>>();
 			final List<Atom3D> atoms = getAtoms();
-			for (Atom3D atom : atoms) {
+			for (final Atom3D atom : atoms) {
 				final int position = atom.getPositionInPDB();
 				if (atomsByPosition.containsKey(position)) {
 					atomsByPosition.get(position).add(atom);
 				} else {
-					List<Atom3D> list = new ArrayList<Atom3D>();
+					final List<Atom3D> list = new ArrayList<Atom3D>();
 					list.add(atom);
 					atomsByPosition.put(position, list);
 				}
@@ -240,8 +240,8 @@ public class PDBParser {
 
 	public List<Atom3D> getAtoms(String chainID, String aa, AtomType atomType)
 			throws IOException, NotValidPDBException {
-		List<Atom3D> ret = new ArrayList<Atom3D>();
-		for (Atom3D atom : getAtoms()) {
+		final List<Atom3D> ret = new ArrayList<Atom3D>();
+		for (final Atom3D atom : getAtoms()) {
 			if (atom.getChainID().equals(chainID) && atom.getAa().equals(aa) && atom.getAtomType() == atomType) {
 				ret.add(atom);
 			}
@@ -252,10 +252,10 @@ public class PDBParser {
 
 	public List<String> getChainIDs() {
 
-		List<String> ret = new ArrayList<String>();
-		List<DBRef> dbRefs = getDBRefs();
-		for (DBRef dbRef : dbRefs) {
-			String chainID = dbRef.getChainID();
+		final List<String> ret = new ArrayList<String>();
+		final List<DBRef> dbRefs = getDBRefs();
+		for (final DBRef dbRef : dbRefs) {
+			final String chainID = dbRef.getChainID();
 			if (!ret.contains(chainID)) {
 				ret.add(chainID);
 			}
@@ -268,7 +268,7 @@ public class PDBParser {
 		if (dbRefs == null) {
 			final List<String> lines = getLinesContaining(DBREF);
 			dbRefs = new ArrayList<DBRef>();
-			for (String dbLine : lines) {
+			for (final String dbLine : lines) {
 				dbRefs.add(new DBRef(dbLine));
 			}
 		}
@@ -279,9 +279,9 @@ public class PDBParser {
 	public String getExperimentalMethod() {
 		if (experimentalMethod == null) {
 
-			List<String> lines = getLinesStarting(EXPDTA);
+			final List<String> lines = getLinesStarting(EXPDTA);
 			if (!lines.isEmpty()) {
-				String string = lines.get(0);
+				final String string = lines.get(0);
 				experimentalMethod = string.substring(string.indexOf(EXPDTA) + EXPDTA.length()).trim();
 			}
 
@@ -290,11 +290,11 @@ public class PDBParser {
 	}
 
 	public String getSequence(DBRef dbRef) {
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		int position = -1;
-		List<Atom3D> atoms = getAtoms();
+		final List<Atom3D> atoms = getAtoms();
 
-		for (Atom3D atom : atoms) {
+		for (final Atom3D atom : atoms) {
 			if (dbRef.getChainID().equals(atom.getChainID())) {
 				if ("".equals(sb.toString())) {
 					// if this is the first AA and the position is not 1, fill
@@ -331,22 +331,22 @@ public class PDBParser {
 			return linesMap.get(containing);
 		}
 		try {
-			List<String> list = Files.lines(Paths.get(filePath)).filter(s -> s.contains(containing))
+			final List<String> list = Files.lines(Paths.get(filePath)).filter(s -> s.contains(containing))
 					.collect(Collectors.toList());
 			linesMap.put(containing, list);
 			return list;
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			return Collections.emptyList();
 		}
 	}
 
 	private List<String> getLinesStarting(String starting) {
-		Path path = Paths.get(filePath);
+		final Path path = Paths.get(filePath);
 		// When filteredLines is closed, it closes underlying stream as well as
 		// underlying file.
 		try {
 			return Files.lines(path).filter(s -> s.startsWith(starting)).collect(Collectors.toList());
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			return Collections.emptyList();
 		}
 	}
@@ -371,14 +371,14 @@ public class PDBParser {
 	 * @return
 	 */
 	public File getFileFolder() {
-		File folder = new File(filePath).getParentFile();
+		final File folder = new File(filePath).getParentFile();
 		return folder;
 	}
 
 	public boolean containsUniprotReference(String uniprotAcc) {
 
-		List<DBRef> dbRefs = getDBRefs();
-		for (DBRef dbRef : dbRefs) {
+		final List<DBRef> dbRefs = getDBRefs();
+		for (final DBRef dbRef : dbRefs) {
 			if (dbRef.getUniprotID() != null && dbRef.getUniprotID().equals(uniprotAcc)) {
 				return true;
 			}
@@ -409,13 +409,13 @@ public class PDBParser {
 	// }
 	public Collection<Distance> getDistancesOfAtom(double distanceThreshold, Atom3D atom1, String aa2,
 			AtomType atomType2) {
-		Set<Distance> ret = new HashSet<Distance>();
+		final Set<Distance> ret = new HashSet<Distance>();
 
-		List<Atom3D> atoms2 = getAtomsByAminacidAndType(aa2, atomType2);
+		final List<Atom3D> atoms2 = getAtomsByAminacidAndType(aa2, atomType2);
 
 		for (int j = 0; j < atoms2.size(); j++) {
-			Atom3D atom2 = atoms2.get(j);
-			double distance = atom1.distance(atom2);
+			final Atom3D atom2 = atoms2.get(j);
+			final double distance = atom1.distance(atom2);
 			if (!atom2.getChainID().contentEquals(atom1.getChainID())) {
 				if (minDistanceBetweenDifferentChains > distance) {
 					minDistanceBetweenDifferentChains = distance;
@@ -437,7 +437,7 @@ public class PDBParser {
 	private List<Atom3D> getAtomsByAminacidAndType(String aa, AtomType atomType) {
 		getAtoms();
 		if (atomsByAminoacidAndType.containsKey(aa)) {
-			Map<AtomType, List<Atom3D>> atomsByType = atomsByAminoacidAndType.get(aa);
+			final Map<AtomType, List<Atom3D>> atomsByType = atomsByAminoacidAndType.get(aa);
 			if (atomsByType.containsKey(atomType)) {
 				return atomsByType.get(atomType);
 			}

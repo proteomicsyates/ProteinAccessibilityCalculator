@@ -42,39 +42,40 @@ public class SurfaceReport extends JMolAtomReport {
 	public static SurfaceReport getFromString(String string) {
 		try {
 			final String[] split = string.split(sep);
-			int index = 0;
+			int index = 2;
 
-			String pdbID = split[index++];
-			String uniprotACC = split[index++];
-			int positionInUniprot = Integer.valueOf(split[index++]);
+			final String pdbID = split[index++];
+			index++;
+			final String uniprotACC = split[index++];
+			final int positionInUniprot = Integer.valueOf(split[index++]);
 			Float resolution = null;
 			try {
 				resolution = Float.valueOf(split[index++]);
-			} catch (Exception e) {
+			} catch (final Exception e) {
 			}
 			// // get the rest of the splitted items to construct the
 			// Atom object
-			StringBuilder sb = new StringBuilder();
+			final StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < Atom3D.numElementsInPrint(); i++) {
 				sb.append(split[index++]).append(sep);
 			}
 
-			Atom3D atom = Atom3D.getFromString(sb.toString());
-			Boolean removeOtherChains = Boolean.valueOf(split[index++]);
-			Boolean removeOtherMolecules = Boolean.valueOf(split[index++]);
-			Boolean containsMutation = Boolean.valueOf(split[index++]);
-			String method = split[index++];
+			final Atom3D atom = Atom3D.getFromString(sb.toString());
+			final Boolean removeOtherChains = Boolean.valueOf(split[index++]);
+			final Boolean removeOtherMolecules = Boolean.valueOf(split[index++]);
+			final Boolean containsMutation = Boolean.valueOf(split[index++]);
+			final String method = split[index++];
 			Double accessibility = null;
 			try {
 				accessibility = Double.valueOf(split[index++]);
-			} catch (Exception e) {
+			} catch (final Exception e) {
 			}
-			SurfaceReport report = new SurfaceReport(accessibility, pdbID, atom, uniprotACC, positionInUniprot,
+			final SurfaceReport report = new SurfaceReport(accessibility, pdbID, atom, uniprotACC, positionInUniprot,
 					resolution, removeOtherChains, removeOtherMolecules, containsMutation, method);
 			return report;
 		} catch (
 
-		Exception e) {
+		final Exception e) {
 			e.printStackTrace();
 			return null;
 		}
@@ -87,7 +88,7 @@ public class SurfaceReport extends JMolAtomReport {
 	 */
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		String accessibilityString = "-";
 		if (accessibility != null) {
 			accessibilityString = String.valueOf(accessibility);
@@ -98,7 +99,7 @@ public class SurfaceReport extends JMolAtomReport {
 
 	@Override
 	public String getToStringHeaders() {
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		sb.append(JMolAtomReport.getStaticHeaders()).append(sep).append("Surface_accessibility");
 		return sb.toString();
 	}

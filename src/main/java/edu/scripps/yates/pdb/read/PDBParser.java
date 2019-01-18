@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 import org.jmol.api.JmolViewer;
@@ -330,13 +331,18 @@ public class PDBParser {
 			log.info(containing + " already readed");
 			return linesMap.get(containing);
 		}
+		Stream<String> stream = null;
 		try {
-			final List<String> list = Files.lines(Paths.get(filePath)).filter(s -> s.contains(containing))
-					.collect(Collectors.toList());
+			stream = Files.lines(Paths.get(filePath)).filter(s -> s.contains(containing));
+			final List<String> list = stream.collect(Collectors.toList());
 			linesMap.put(containing, list);
 			return list;
 		} catch (final IOException e) {
 			return Collections.emptyList();
+		} finally {
+			if (stream != null) {
+				stream.close();
+			}
 		}
 	}
 
@@ -344,10 +350,16 @@ public class PDBParser {
 		final Path path = Paths.get(filePath);
 		// When filteredLines is closed, it closes underlying stream as well as
 		// underlying file.
+		Stream<String> stream = null;
 		try {
-			return Files.lines(path).filter(s -> s.startsWith(starting)).collect(Collectors.toList());
+			stream = Files.lines(path).filter(s -> s.startsWith(starting));
+			return stream.collect(Collectors.toList());
 		} catch (final IOException e) {
 			return Collections.emptyList();
+		} finally {
+			if (stream != null) {
+				stream.close();
+			}
 		}
 	}
 

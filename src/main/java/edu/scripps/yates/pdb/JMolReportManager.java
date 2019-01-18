@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 
@@ -53,8 +54,8 @@ public abstract class JMolReportManager<R extends ProteinReport<T>, T extends JM
 	public abstract String getFileName();
 
 	public Map<String, R> getProteinReportsByProteins(Collection<Protein> proteins, Entry entry) {
-		Map<String, R> ret = new THashMap<String, R>();
-		for (Protein protein : proteins) {
+		final Map<String, R> ret = new THashMap<String, R>();
+		for (final Protein protein : proteins) {
 			final R proteinReportByProtein = getProteinReportByProtein(protein.getAcc(), null, entry);
 			if (proteinReportByProtein != null) {
 				ret.put(protein.getAcc(), proteinReportByProtein);
@@ -84,9 +85,10 @@ public abstract class JMolReportManager<R extends ProteinReport<T>, T extends JM
 		final R proteinReport = calculator.getReportFromProtein(proteinAcc, pdbID, entry);
 		if (proteinReport != null) {
 
-			TIntObjectHashMap<Set<T>> reportsByPositionInUniprotSeq = proteinReport.getReportsByPositionInUniprotSeq();
-			for (Set<T> reports : reportsByPositionInUniprotSeq.valueCollection()) {
-				for (T report : reports) {
+			final TIntObjectHashMap<Set<T>> reportsByPositionInUniprotSeq = proteinReport
+					.getReportsByPositionInUniprotSeq();
+			for (final Set<T> reports : reportsByPositionInUniprotSeq.valueCollection()) {
+				for (final T report : reports) {
 					addReport(report);
 				}
 			}
@@ -116,20 +118,20 @@ public abstract class JMolReportManager<R extends ProteinReport<T>, T extends JM
 				// write the header = true
 				writeHeader = true;
 			}
-			FileWriter fw = new FileWriter(file, true);
-			BufferedWriter bw = new BufferedWriter(fw);
+			final FileWriter fw = new FileWriter(file, true);
+			final BufferedWriter bw = new BufferedWriter(fw);
 			out = new PrintWriter(bw);
 
 			boolean firstOne = true;
 			final TIntObjectHashMap<Set<T>> positions = proteinReport.getReportsByPositionInUniprotSeq();
-			List<Integer> sortedPositions = new ArrayList<Integer>();
-			for (int position : positions.keys()) {
+			final List<Integer> sortedPositions = new ArrayList<Integer>();
+			for (final int position : positions.keys()) {
 				sortedPositions.add(position);
 			}
 			Collections.sort(sortedPositions);
-			for (Integer position : sortedPositions) {
+			for (final Integer position : sortedPositions) {
 				final Set<T> reports = positions.get(position);
-				for (T report : reports) {
+				for (final T report : reports) {
 					if (!report.isStored()) {
 						if (firstOne) {
 							log.info("Appending report of protein " + proteinReport.getUniprotACC() + " to file");
@@ -145,7 +147,7 @@ public abstract class JMolReportManager<R extends ProteinReport<T>, T extends JM
 			if (!firstOne) {
 				log.info("Report appended to file");
 			}
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			e.printStackTrace();
 		} finally {
 			out.close();
@@ -154,33 +156,33 @@ public abstract class JMolReportManager<R extends ProteinReport<T>, T extends JM
 	}
 
 	/**
-	 * Write all the information in memory to the file, overriding the content
-	 * of the file
+	 * Write all the information in memory to the file, overriding the content of
+	 * the file
 	 */
 	public void dumpToFile() {
 		PrintWriter out = null;
 		try {
 			log.info("Writting into file reports for " + reportsByKey.size() + " proteins");
-			FileWriter fw = new FileWriter(file, true);
-			BufferedWriter bw = new BufferedWriter(fw);
+			final FileWriter fw = new FileWriter(file, true);
+			final BufferedWriter bw = new BufferedWriter(fw);
 			out = new PrintWriter(bw);
 
-			List<String> keys = new ArrayList<String>();
+			final List<String> keys = new ArrayList<String>();
 			keys.addAll(reportsByKey.keySet());
 			Collections.sort(keys);
 			boolean firstOne = true;
-			for (String key : keys) {
+			for (final String key : keys) {
 				final R proteinReport = reportsByKey.get(key);
 				final TIntObjectHashMap<Set<T>> positions = proteinReport.getReportsByPositionInUniprotSeq();
-				List<Integer> sortedPositions = new ArrayList<Integer>();
-				for (int position : positions.keys()) {
+				final List<Integer> sortedPositions = new ArrayList<Integer>();
+				for (final int position : positions.keys()) {
 					sortedPositions.add(position);
 				}
 
 				Collections.sort(sortedPositions);
-				for (Integer position : sortedPositions) {
+				for (final Integer position : sortedPositions) {
 					final Set<T> reports = positions.get(position);
-					for (JMolAtomReport surfaceAccessibilityReport : reports) {
+					for (final JMolAtomReport surfaceAccessibilityReport : reports) {
 						if (firstOne) {
 							log.info("Overriding report of protein " + proteinReport.getUniprotACC() + " to file");
 							// write header for the first one
@@ -192,7 +194,7 @@ public abstract class JMolReportManager<R extends ProteinReport<T>, T extends JM
 				}
 			}
 			log.info("Reports writed at: " + file.getAbsolutePath());
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			e.printStackTrace();
 		} finally {
 			out.close();
@@ -210,8 +212,8 @@ public abstract class JMolReportManager<R extends ProteinReport<T>, T extends JM
 					// this will avoid the annotation of proteins one by one
 					// when a new version of uniprot is released
 					annotateAllProteinsInReports();
-					FileInputStream fstream = new FileInputStream(file);
-					DataInputStream in = new DataInputStream(fstream);
+					final FileInputStream fstream = new FileInputStream(file);
+					final DataInputStream in = new DataInputStream(fstream);
 					br = new BufferedReader(new InputStreamReader(in));
 					String strLine;
 					// Read File Line By Line
@@ -221,7 +223,7 @@ public abstract class JMolReportManager<R extends ProteinReport<T>, T extends JM
 							firstLine = false;
 							continue;
 						}
-						T report = parseFromLine(strLine);
+						final T report = parseFromLine(strLine);
 						if (report != null) {
 							report.setStored(true);
 							addReport(report);
@@ -230,13 +232,13 @@ public abstract class JMolReportManager<R extends ProteinReport<T>, T extends JM
 					loaded = true;
 					log.info(" accesibilities numbers loaded from local file for " + reportsByKey.size() + " sites");
 				}
-			} catch (IOException e) {
+			} catch (final IOException e) {
 				e.printStackTrace();
 			} finally {
 				if (br != null) {
 					try {
 						br.close();
-					} catch (IOException e) {
+					} catch (final IOException e) {
 						e.printStackTrace();
 					}
 				}
@@ -248,24 +250,31 @@ public abstract class JMolReportManager<R extends ProteinReport<T>, T extends JM
 
 	private void annotateAllProteinsInReports() {
 		try {
-			UniprotProteinLocalRetriever uplr = calculator.getUplr();
+			final UniprotProteinLocalRetriever uplr = calculator.getUplr();
 			if (uplr != null) {
 				log.info(
 						"Getting Uniprot annotations for all the proteins in the stored reports, in order to get the protein sequences");
 				if (file.exists()) {
-					Set<String> accs = Files.lines(Paths.get(file.getAbsolutePath())).map(l -> l.split("\t")[4])
-							.collect(Collectors.toSet());
+					Stream<String> stream = null;
+					try {
+						stream = Files.lines(Paths.get(file.getAbsolutePath()));
+						final Set<String> accs = stream.map(l -> l.split("\t")[4]).collect(Collectors.toSet());
+						uplr.getAnnotatedProteins(null, accs);
+					} finally {
+						if (stream != null) {
+							stream.close();
+						}
+					}
 
-					uplr.getAnnotatedProteins(null, accs);
 				}
 			}
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			e.printStackTrace();
 		}
 	}
 
 	private void addReport(T report) {
-		String key = report.getReportKey();
+		final String key = report.getReportKey();
 		if (reportsByKey.containsKey(key)) {
 			reportsByKey.get(key).addReport(report);
 		} else {
@@ -275,7 +284,7 @@ public abstract class JMolReportManager<R extends ProteinReport<T>, T extends JM
 				final Entry entry = annotatedProtein.get(report.getUniprotACC());
 				final String proteinSequence = SurfaceCalculator.getUniprotProteinSequence(entry);
 				if (proteinSequence != null) {
-					R proteinReport = createProteinReport(report.getUniprotACC(), proteinSequence);
+					final R proteinReport = createProteinReport(report.getUniprotACC(), proteinSequence);
 					proteinReport.addReport(report);
 					reportsByKey.put(key, proteinReport);
 				}
@@ -288,19 +297,19 @@ public abstract class JMolReportManager<R extends ProteinReport<T>, T extends JM
 	public abstract T parseFromLine(String strLine);
 
 	public Map<String, R> getReportsFromProteins(Collection<Protein> proteins) {
-		List<Protein> list = new ArrayList<Protein>();
+		final List<Protein> list = new ArrayList<Protein>();
 		list.addAll(proteins);
 		return getReportsFromProteins(list, null);
 	}
 
 	public Map<String, R> getReportsFromProteins(List<Protein> proteins, List<Entry> entries) {
-		Map<String, R> ret = new THashMap<String, R>();
+		final Map<String, R> ret = new THashMap<String, R>();
 
-		ProgressCounter counter = new ProgressCounter(proteins.size(), ProgressPrintingType.PERCENTAGE_STEPS, 1);
+		final ProgressCounter counter = new ProgressCounter(proteins.size(), ProgressPrintingType.PERCENTAGE_STEPS, 1);
 		int index = 0;
-		for (Protein protein : proteins) {
+		for (final Protein protein : proteins) {
 			counter.increment();
-			String printIfNecessary = counter.printIfNecessary();
+			final String printIfNecessary = counter.printIfNecessary();
 			if (!"".equals(printIfNecessary)) {
 				log.info(printIfNecessary);
 			}
@@ -316,8 +325,7 @@ public abstract class JMolReportManager<R extends ProteinReport<T>, T extends JM
 	}
 
 	/**
-	 * @param calculateIfNotPresent
-	 *            the calculateIfNotPresent to set
+	 * @param calculateIfNotPresent the calculateIfNotPresent to set
 	 */
 	public void setCalculateIfNotPresent(boolean calculateIfNotPresent) {
 	}

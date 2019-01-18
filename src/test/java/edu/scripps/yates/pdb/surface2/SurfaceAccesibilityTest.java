@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.junit.Test;
 
@@ -544,7 +545,15 @@ public class SurfaceAccesibilityTest {
 
 			final Set<String> accs = new THashSet<String>();
 			if (dnaBindingProteins.exists()) {
-				accs.addAll(Files.lines(Paths.get(dnaBindingProteins.toURI())).collect(Collectors.toSet()));
+				Stream<String> stream = null;
+				try {
+					stream = Files.lines(Paths.get(dnaBindingProteins.toURI()));
+					accs.addAll(stream.collect(Collectors.toSet()));
+				} finally {
+					if (stream != null) {
+						stream.close();
+					}
+				}
 
 			}
 

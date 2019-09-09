@@ -115,7 +115,7 @@ public class Main {
 							+ PropertiesReader.CALCULATION_TYPE + "=" + CalculationType.PDB_SURFACE);
 					System.exit(-1);
 				}
-				outputFile = Paths.get(getJarFolder().getAbsolutePath() + File.separator + "PDB_SURFACE_REPORT.txt");
+				outputFile = Paths.get(propertiesFile.getParent() + File.separator + "PDB_SURFACE_REPORT.txt");
 				writer = Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8, StandardOpenOption.CREATE,
 						StandardOpenOption.WRITE);
 				writer.write(JMolAtomReport.getStaticHeaders() + "\n");

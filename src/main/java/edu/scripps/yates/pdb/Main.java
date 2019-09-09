@@ -17,6 +17,7 @@ import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
+import org.springframework.core.io.ClassPathResource;
 
 import com.compomics.dbtoolkit.io.EnzymeLoader;
 import com.compomics.util.protein.Enzyme;
@@ -32,14 +33,18 @@ import edu.scripps.yates.pdb.read.InputFileReader;
 import edu.scripps.yates.pdb.surface.SurfaceCalculator;
 import edu.scripps.yates.pdb.surface.SurfaceProteinReport;
 import edu.scripps.yates.pdb.util.PropertiesReader;
+import edu.scripps.yates.utilities.appversion.AppVersion;
 import edu.scripps.yates.utilities.progresscounter.ProgressCounter;
 import edu.scripps.yates.utilities.progresscounter.ProgressPrintingType;
+import edu.scripps.yates.utilities.properties.PropertiesUtil;
 
 public class Main {
 	private final static Logger log = Logger.getLogger(Main.class);
+	private static AppVersion version;
 
 	public static void main(String[] args) {
-
+		final AppVersion version = Main.getVersion();
+		System.out.println("Running PAC-calculator version " + version.toString());
 		BufferedWriter writer = null;
 		Path outputFile = null;
 		if (args.length == 0) {
@@ -363,4 +368,22 @@ public class Main {
 		return new File(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParentFile();
 	}
 
+	public static AppVersion getVersion() {
+		if (version == null) {
+			try {
+				final String tmp = PropertiesUtil
+						.getProperties(new ClassPathResource(AppVersion.APP_PROPERTIES).getInputStream())
+						.getProperty("assembly.dir");
+				if (tmp.contains("v")) {
+					version = new AppVersion(tmp.split("v")[1]);
+				} else {
+					version = new AppVersion(tmp);
+				}
+			} catch (final Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return version;
+
+	}
 }

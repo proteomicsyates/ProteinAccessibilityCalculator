@@ -120,7 +120,8 @@ public class Main {
 							+ PropertiesReader.CALCULATION_TYPE + "=" + CalculationType.PDB_SURFACE);
 					System.exit(-1);
 				}
-				outputFile = Paths.get(propertiesFile.getCanonicalPath() + File.separator + "PDB_SURFACE_REPORT.txt");
+				outputFile = Paths.get(new File(propertiesFile.getCanonicalPath()).getParent() + File.separator
+						+ "PDB_SURFACE_REPORT.txt");
 				writer = Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8, StandardOpenOption.CREATE,
 						StandardOpenOption.WRITE);
 				writer.write(JMolAtomReport.getStaticHeaders() + "\n");

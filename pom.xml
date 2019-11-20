@@ -44,7 +44,7 @@
   	<dependency>
   		<groupId>com.compomics</groupId>
   		<artifactId>dbtoolkit</artifactId>
-  		<version>4.2.4</version>
+  		<version>4.2.6</version>
   		<exclusions>
 	        <exclusion>
 	          <artifactId>batik-all</artifactId>
@@ -136,7 +136,6 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-dependency-plugin</artifactId>
-				<version>3.0.2</version>
 				<executions>
 					<execution>
 						<id>copy-dependencies</id>
@@ -187,7 +186,6 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
-				<version>3.1.0</version>
 				<executions>
 					<execution>
 						<id>assembly</id>

@@ -319,6 +319,9 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 
 	private Set<Chain> getChainsFromChainString(String chainsString, DbReferenceType dbReferenceType,
 			Float resolution) {
+		if (chainsString == null) {
+			return Collections.emptySet();
+		}
 		final Set<Chain> ret = new THashSet<Chain>();
 		if (chainsString.contains(",")) {
 			final String[] split = chainsString.split(",");

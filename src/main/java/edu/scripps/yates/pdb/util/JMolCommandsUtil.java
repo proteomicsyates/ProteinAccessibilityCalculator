@@ -19,7 +19,7 @@ public class JMolCommandsUtil {
 
 	public static JMolScript getSelectAndAddLabels(ProteinReport proteinReport, String pdbID) {
 		// delete all molecules not equals to
-		JMolScript ret = new JMolScript();
+		final JMolScript ret = new JMolScript();
 		ret.addCommand("delete not protein");
 
 		ret.addCommand("Color Background White");
@@ -28,12 +28,12 @@ public class JMolCommandsUtil {
 		ret.addCommand("color [217,255,255]");
 
 		// add the labels for each site
-		Map<String, Set<JMolAtomReport>> reportsByPDBID = proteinReport.getReportsByPDBID();
-		Set<JMolAtomReport> reports = reportsByPDBID.get(pdbID);
+		final Map<String, Set<JMolAtomReport>> reportsByPDBID = proteinReport.getReportsByPDBID();
+		final Set<JMolAtomReport> reports = reportsByPDBID.get(pdbID);
 
-		Set<String> chainIDs = getChainIDs(reports);
+		final Set<String> chainIDs = getChainIDs(reports);
 		ret.addCommand(getCommandForDeletingEverythingElse(chainIDs));
-		for (JMolAtomReport report : reports) {
+		for (final JMolAtomReport report : reports) {
 
 			// ret.addCommand("save state my_state");
 			// ret.addCommand("delete not chain = " +
@@ -42,8 +42,8 @@ public class JMolCommandsUtil {
 			ret.addCommand("color black");
 			ret.addCommand("color label black");
 			if (report instanceof SurfaceReport) {
-				SurfaceReport surfaceReport = (SurfaceReport) report;
-				Double accessibility = surfaceReport.getAccessibility();
+				final SurfaceReport surfaceReport = (SurfaceReport) report;
+				final Double accessibility = surfaceReport.getAccessibility();
 				String formated = "N/A";
 				if (accessibility != null) {
 					formated = df.format(accessibility);
@@ -59,7 +59,7 @@ public class JMolCommandsUtil {
 		ret.addCommand("select ");
 
 		int i = 1;
-		for (JMolAtomReport surfaceAccessibilityReport : reports) {
+		for (final JMolAtomReport surfaceAccessibilityReport : reports) {
 			ret.appendToLastCommand("atomno = " + surfaceAccessibilityReport.getAtom().getAtomNumber());
 			if (i < reports.size()) {
 				ret.appendToLastCommand(",");
@@ -73,11 +73,11 @@ public class JMolCommandsUtil {
 	}
 
 	private static String getCommandForDeletingEverythingElse(Set<String> chainIDs) {
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		sb.append("delete not (");
 
 		int numChain = 1;
-		for (String chainID : chainIDs) {
+		for (final String chainID : chainIDs) {
 			if (numChain > 1 && numChain < chainIDs.size()) {
 				sb.append(" OR ");
 			}
@@ -89,8 +89,8 @@ public class JMolCommandsUtil {
 	}
 
 	private static Set<String> getChainIDs(Set<JMolAtomReport> reports) {
-		Set<String> ret = new THashSet<String>();
-		for (JMolAtomReport surfaceAccessibilityReport : reports) {
+		final Set<String> ret = new THashSet<String>();
+		for (final JMolAtomReport surfaceAccessibilityReport : reports) {
 			ret.add(surfaceAccessibilityReport.getAtom().getChainID());
 		}
 		return ret;
@@ -98,7 +98,7 @@ public class JMolCommandsUtil {
 
 	public static JMolScript getDrawSurfaceJMolScriptByAtom(Atom3D atom) {
 		// delete all molecules not equals to
-		JMolScript sb = new JMolScript();
+		final JMolScript sb = new JMolScript();
 		// delete all molecules different than a protein
 		sb.addCommand("delete not protein");
 		// delete all molecules different than our chain
@@ -112,7 +112,7 @@ public class JMolCommandsUtil {
 	}
 
 	public static JMolScript getSelectAtomScript(Atom3D atom) {
-		JMolScript ret = new JMolScript();
+		final JMolScript ret = new JMolScript();
 
 		// select atom number
 		ret.addCommand("select atomno = " + atom.getAtomNumber() + "");
@@ -121,7 +121,7 @@ public class JMolCommandsUtil {
 	}
 
 	public static JMolScript getCalculateSurfaceScript(Atom3D atom) {
-		JMolScript ret = new JMolScript();
+		final JMolScript ret = new JMolScript();
 		// calculate isosurface of the selected atom
 		ret.addCommand("select atomno=" + atom.getAtomNumber() + ";isoSurface saSurface;isosurface area set 0");
 
@@ -131,7 +131,7 @@ public class JMolCommandsUtil {
 	public static JMolScript getSelectChainJMolScriptByAtom(Atom3D atom, boolean removeOtherChains,
 			boolean removeOtherMolecules) {
 		// delete all molecules not equals to
-		JMolScript ret = new JMolScript();
+		final JMolScript ret = new JMolScript();
 		// delete all molecules different than a protein
 		if (removeOtherMolecules) {
 			ret.addCommand("delete not protein");
@@ -145,14 +145,14 @@ public class JMolCommandsUtil {
 
 	public static JMolScript getCalculateDistanceScript(String chain1ID, String aa1, AtomType atomType1,
 			String chain2ID, String aa2, AtomType atomType2) {
-		JMolScript ret = new JMolScript();
+		final JMolScript ret = new JMolScript();
 		ret.addCommand("measure all ([" + convertToThreeLetterAA(aa1) + "]*" + chain1ID + "." + atomType1.name()
 				+ ") ([" + convertToThreeLetterAA(aa2) + "]*" + chain2ID + "." + atomType2.name() + ")");
 		return ret;
 	}
 
 	public static JMolScript getMeasureListScript() {
-		JMolScript ret = new JMolScript();
+		final JMolScript ret = new JMolScript();
 		ret.addCommand("measure list");
 		return ret;
 	}
@@ -161,9 +161,9 @@ public class JMolCommandsUtil {
 		return AminoAcid.getAminoAcid(aa.charAt(0)).threeLetterCode;
 	}
 
-	public static String convertToOneLetterAA(String threeLetterCodeAA) {
-		for (String aminoacid : AminoAcid.getAminoAcids()) {
-			if (AminoAcid.getAminoAcid(aminoacid.charAt(0)).threeLetterCode.equalsIgnoreCase(threeLetterCodeAA)) {
+	public static char convertToOneLetterAA(String threeLetterCodeAA) {
+		for (final char aminoacid : AminoAcid.getAminoAcids()) {
+			if (AminoAcid.getAminoAcid(aminoacid).threeLetterCode.equalsIgnoreCase(threeLetterCodeAA)) {
 				return aminoacid;
 			}
 		}
@@ -172,7 +172,7 @@ public class JMolCommandsUtil {
 	}
 
 	public static JMolScript getMeasureOffScript() {
-		JMolScript ret = new JMolScript();
+		final JMolScript ret = new JMolScript();
 		ret.addCommand("measure off");
 		return ret;
 	}

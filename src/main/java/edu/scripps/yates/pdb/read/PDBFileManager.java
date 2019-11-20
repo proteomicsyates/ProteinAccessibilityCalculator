@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
 import gnu.trove.map.hash.THashMap;
@@ -28,14 +27,14 @@ public class PDBFileManager {
 
 	public static PDBFileManager getInstance(File parentPath) {
 		if (!instances.containsKey(parentPath)) {
-			PDBFileManager instance = new PDBFileManager(parentPath);
+			final PDBFileManager instance = new PDBFileManager(parentPath);
 			instances.put(parentPath, instance);
 		}
 		return instances.get(parentPath);
 	}
 
 	public File getPDBFile(String pdbID) throws IOException {
-		File finalFile = getFile(pdbID);
+		final File finalFile = getFile(pdbID);
 		if (finalFile.exists()) {
 			return finalFile;
 		} else {
@@ -45,8 +44,8 @@ public class PDBFileManager {
 
 	public File savePDBFile(File pdbFile, String pdbID) throws IOException {
 		if (pdbFile != null && pdbFile.exists() && pdbFile.isFile()) {
-			File finalFile = getFile(pdbID);
-			FileUtils.moveFile(pdbFile, finalFile);
+			final File finalFile = getFile(pdbID);
+			pdbFile.renameTo(finalFile);
 			log.info("PDB file saved at: " + finalFile);
 			return finalFile;
 		} else {

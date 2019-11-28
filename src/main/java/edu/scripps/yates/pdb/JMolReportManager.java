@@ -201,7 +201,7 @@ public abstract class JMolReportManager<R extends ProteinReport<T>, T extends JM
 					}
 				}
 			}
-			log.info("Reports writed at: " + file.getAbsolutePath());
+			log.info("Reports written at: " + file.getAbsolutePath());
 		} catch (final IOException e) {
 			e.printStackTrace();
 		} finally {

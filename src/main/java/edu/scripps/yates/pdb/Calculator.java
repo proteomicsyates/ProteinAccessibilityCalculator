@@ -177,6 +177,7 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 		if (proteinReport.isEmpty()) {
 			return null;
 		}
+		this.reportManager.dumpToFile();
 		return proteinReport;
 
 	}
@@ -598,8 +599,7 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 												positionInUniprotProtein, chain, uniprotPeptideSequence,
 												positionInPeptide, proteinAcc, removeOtherChains, removeOtherMolecules);
 										final String reportKey = inputParameters.getReportKey();
-										final R proteinReportByProtein = reportManager
-												.getReportByKey(reportKey);
+										final R proteinReportByProtein = reportManager.getReportByKey(reportKey);
 										if (proteinReportByProtein != null) {
 											for (final T report : proteinReportByProtein.getReports()) {
 												proteinReport.addReport(report);

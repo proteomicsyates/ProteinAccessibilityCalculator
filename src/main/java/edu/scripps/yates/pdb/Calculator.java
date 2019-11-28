@@ -597,8 +597,9 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 										final InputParameters inputParameters = new InputParameters(atomTypeMap,
 												positionInUniprotProtein, chain, uniprotPeptideSequence,
 												positionInPeptide, proteinAcc, removeOtherChains, removeOtherMolecules);
+										final String reportKey = inputParameters.getReportKey();
 										final R proteinReportByProtein = reportManager
-												.getReportByKey(inputParameters.getReportKey());
+												.getReportByKey(reportKey);
 										if (proteinReportByProtein != null) {
 											for (final T report : proteinReportByProtein.getReports()) {
 												proteinReport.addReport(report);
@@ -648,7 +649,9 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 					final Map<String, T> siteReports = getSiteReportFromParameters(parser, inputParameters);
 					if (siteReports != null) {
 						for (final String key : siteReports.keySet()) {
-							proteinReport.addReport(siteReports.get(key));
+							final T report = siteReports.get(key);
+							proteinReport.addReport(report);
+
 						}
 
 					}
@@ -667,6 +670,7 @@ public abstract class Calculator<R extends ProteinReport<T>, T extends JMolAtomR
 		if (proteinReport.isEmpty()) {
 			return null;
 		}
+		this.reportManager.dumpToFile();
 		return proteinReport;
 
 	}

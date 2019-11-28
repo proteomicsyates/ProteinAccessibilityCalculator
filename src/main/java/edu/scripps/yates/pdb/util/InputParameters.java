@@ -17,7 +17,7 @@ public class InputParameters {
 	private final String uniprotACC;
 	private String pdbID;
 	private final boolean removeOtherChains;
-	private boolean removeOtherMolecules;
+	private final boolean removeOtherMolecules;
 
 	public InputParameters(Map<Character, List<AtomType>> atomTypeMap, int positionInUniprotProtein, Chain chain,
 			String uniprotPeptideSeq, int positionInPeptide, String uniprotACC, boolean removeOtherChains,
@@ -112,26 +112,33 @@ public class InputParameters {
 		return removeOtherMolecules;
 	}
 
+	/**
+	 * IMPORTANT: THIS HAS TO BE IN CONCORDANCE WITH JMolAtomReport.getKey()
+	 * 
+	 * @return
+	 */
 	public String getReportKey() {
-		Chain chain2 = getChain();
+		final Chain chain2 = getChain();
 		String chainID = null;
 		if (chain2 != null) {
 			chainID = chain2.getIdentifier();
 		}
-		return uniprotACC + "-" + getPdbID() + "-" + chainID + "-" + getAtomTypeMapString() + "-" + removeOtherChains
-				+ "-" + removeOtherMolecules;
+		final String key = uniprotACC + "-" + getAtomTypeMapString() + "-" + getPdbID() + "-" + chainID + "-" + removeOtherChains
+				+ "-" + removeOtherMolecules + "-" + positionInUniprotProtein;
+		return key;
+
 	}
 
 	private String getAtomTypeMapString() {
-		StringBuilder sb = new StringBuilder();
-		Set<Character> keySet = this.atomTypeMap.keySet();
-		for (Character character : keySet) {
+		final StringBuilder sb = new StringBuilder();
+		final Set<Character> keySet = this.atomTypeMap.keySet();
+		for (final Character character : keySet) {
 
-			List<AtomType> atomType = atomTypeMap.get(character);
+			final List<AtomType> atomType = atomTypeMap.get(character);
 			if (!"".equals(sb.toString())) {
 				sb.append("|");
 			}
-			for (AtomType atomType2 : atomType) {
+			for (final AtomType atomType2 : atomType) {
 				sb.append(character + "-" + atomType2);
 			}
 

@@ -187,7 +187,7 @@ public class PDBParser {
 			// return atomList;
 			// }
 			final Set<String> chainsReaded = new HashSet<String>();
-			log.info("Reading PDB file...");
+			log.info("Reading " + this.getPdbID() + " PDB file...");
 			final List<String> lines = getLinesStarting(ATOM);
 			log.info("Parsing " + lines.size() + " ATOM lines");
 			for (final String string : lines) {

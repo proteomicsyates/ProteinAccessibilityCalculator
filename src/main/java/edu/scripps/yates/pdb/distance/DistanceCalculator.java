@@ -44,21 +44,23 @@ public class DistanceCalculator extends Calculator<DistanceProteinReport, Distan
 	@Override
 	public DistanceReport calculateReport(PDBParser parser, InputParameters inputParameters, Atom3D atom,
 			int positionInPDB, Float resolution) {
-		Set<Distance> distances = new HashSet<Distance>();
-		Collection<Distance> distances2 = parser.getDistancesOfAtom(distanceThreshold, atom, "D", AtomType.OD1);
+		final Set<Distance> distances = new HashSet<Distance>();
+		final Collection<Distance> distances2 = parser.getDistancesOfAtom(distanceThreshold, atom, "D", AtomType.OD1);
 		distances.addAll(distances2);
-		Collection<Distance> distances3 = parser.getDistancesOfAtom(distanceThreshold, atom, "D", AtomType.OD2);
+		final Collection<Distance> distances3 = parser.getDistancesOfAtom(distanceThreshold, atom, "D", AtomType.OD2);
 		distances.addAll(distances3);
-		Collection<Distance> distances4 = parser.getDistancesOfAtom(distanceThreshold, atom, "E", AtomType.OE1);
+		final Collection<Distance> distances4 = parser.getDistancesOfAtom(distanceThreshold, atom, "E", AtomType.OE1);
 		distances.addAll(distances4);
-		Collection<Distance> distances5 = parser.getDistancesOfAtom(distanceThreshold, atom, "E", AtomType.OE2);
+		final Collection<Distance> distances5 = parser.getDistancesOfAtom(distanceThreshold, atom, "E", AtomType.OE2);
 		distances.addAll(distances5);
 		if (distances != null && !distances.isEmpty()) {
-			DistanceReport report = new DistanceReport(distances, inputParameters.getPdbID(), atom,
+			final DistanceReport report = new DistanceReport(distances, inputParameters.getPdbID(), atom,
 					inputParameters.getUniprotACC(), inputParameters.getPositionInUniprotProtein(), resolution,
 					inputParameters.isRemoveOtherChains(), inputParameters.isRemoveOtherMolecules(),
 					parser.getMutation(), parser.getExperimentalMethod());
+			this.reportManager.addReport(report);
 			return report;
+
 		}
 		return null;
 	}

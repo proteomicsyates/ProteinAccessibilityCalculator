@@ -42,10 +42,10 @@ public class SurfaceReport extends JMolAtomReport {
 	public static SurfaceReport getFromString(String string) {
 		try {
 			final String[] split = string.split(sep);
-			int index = 2;
+			int index = 0;
 
 			final String pdbID = split[index++];
-			index++;
+//			index++;
 			final String uniprotACC = split[index++];
 			final int positionInUniprot = Integer.valueOf(split[index++]);
 			Float resolution = null;

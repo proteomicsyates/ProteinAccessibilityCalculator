@@ -97,7 +97,7 @@ public class InputFileReader {
 					final DBIndexImpl dbindex = FastaDigestionConfiguration.getFastaDBIndex(fastaDigestion);
 					for (row = 0; row < peptideSequences.size(); row++) {
 
-						String sequence = peptideSequences.get(row);
+						final String rawSequence = peptideSequences.get(row);
 						Double ratio = null;
 						if (peptideRatios != null) {
 							ratioString = peptideRatios.get(row);
@@ -109,41 +109,52 @@ public class InputFileReader {
 								ratio = Double.valueOf(ratioString);
 							}
 						}
-						// remove Ptms or pre and post peptide characteres
-						// if the peptide is a peptide node it could have several peptide sequences
-						// referring to the same quantitation site
-						// so we need to know if contains several sequences and in that case, just take
-						// one
-						if (sequence.contains("_")) {
-							sequence = sequence.split("_")[0];
-						}
-						final String cleanSequence = FastaParser.cleanSequence(sequence);
-						final Set<IndexedProtein> proteins = dbindex.getProteins(cleanSequence);
-						if (proteins == null || proteins.isEmpty()) {
-							log.warn("Peptide '" + sequence + "' (row " + row
-									+ ") is not found in FASTA with the provided digestion parameters: "
-									+ fastaDigestion);
-							if (!fastaDigestion.isIgnorePeptidesNotFoundInDB()) {
-								throw new PeptideNotFoundInDBIndexException(sequence
-										+ " not found in Fasta DB. If you want to ignore that peptide, set ignorePeptidesNotFoundInDB=true in the input parameters");
+						final List<String> sequences = new ArrayList<String>();
+						if (rawSequence.contains("_")) {
+							for (final String seq : rawSequence.split("_")) {
+								sequences.add(seq);
 							}
-							continue;
+						} else {
+							sequences.add(rawSequence);
 						}
-						for (final IndexedProtein indexedProtein : proteins) {
-							final String acc = indexedProtein.getAccession();
-							Protein protein = null;
-							if (ret.containsKey(acc)) {
-								protein = ret.get(acc);
-							} else {
-								protein = new Protein(acc);
-								numProteins++;
-								ret.put(acc, protein);
+						for (final String sequence : sequences) {
+//							
+//						
+//						// remove Ptms or pre and post peptide characteres
+//						// if the peptide is a peptide node it could have several peptide sequences
+//						// referring to the same quantitation site
+//						// so we need to know if contains several sequences and in that case, just take
+//						// one
+//						if (sequence.contains("_")) {
+//							sequence = sequence.split("_")[0];
+//						}
+							final String cleanSequence = FastaParser.cleanSequence(sequence);
+							final Set<IndexedProtein> proteins = dbindex.getProteins(cleanSequence);
+							if (proteins == null || proteins.isEmpty()) {
+								log.warn("Peptide '" + sequence + "' (row " + row
+										+ ") is not found in FASTA with the provided digestion parameters: "
+										+ fastaDigestion);
+								if (!fastaDigestion.isIgnorePeptidesNotFoundInDB()) {
+									throw new PeptideNotFoundInDBIndexException(sequence
+											+ " not found in Fasta DB. If you want to ignore that peptide, set ignorePeptidesNotFoundInDB=true in the input parameters");
+								}
+								continue;
 							}
-							final Peptide peptide = new Peptide(sequence, ratio);
-							numPeptides++;
-							protein.getPeptides().add(peptide);
+							for (final IndexedProtein indexedProtein : proteins) {
+								final String acc = indexedProtein.getAccession();
+								Protein protein = null;
+								if (ret.containsKey(acc)) {
+									protein = ret.get(acc);
+								} else {
+									protein = new Protein(acc);
+									numProteins++;
+									ret.put(acc, protein);
+								}
+								final Peptide peptide = new Peptide(sequence, ratio);
+								numPeptides++;
+								protein.getPeptides().add(peptide);
+							}
 						}
-
 					}
 				} else {
 					log.info(
@@ -160,47 +171,57 @@ public class InputFileReader {
 						if (!"".contentEquals(printIfNecessary)) {
 							log.info(printIfNecessary + " peptides processed");
 						}
-						final String sequence = peptideSequences.get(row);
-						Double ratio = null;
-						if (peptideRatios != null) {
-							ratioString = peptideRatios.get(row);
-							if ("'-Infinity".equals(ratioString)) {
-								ratio = Double.NEGATIVE_INFINITY;
-							} else if ("'Infinity".equals(ratioString)) {
-								ratio = Double.POSITIVE_INFINITY;
-							} else {
-								ratio = Double.valueOf(ratioString);
+						final String rawSequence = peptideSequences.get(row);
+						final List<String> sequences = new ArrayList<String>();
+						if (rawSequence.contains("_")) {
+							for (final String seq : rawSequence.split("_")) {
+								sequences.add(seq);
 							}
+						} else {
+							sequences.add(rawSequence);
 						}
-						// remove Ptms or pre and post peptide characteres
-						final Set<String> proteinAccs = new HashSet<String>();
-						final String cleanSequence = FastaParser.cleanSequence(sequence);
-						for (final String proteinSequence : proteinSequences) {
-							if (proteinSequence.contains(cleanSequence)) {
-								proteinAccs.add(proteinsByProteinSequences.get(proteinSequence));
+						for (final String sequence : sequences) {
+							Double ratio = null;
+							if (peptideRatios != null) {
+								ratioString = peptideRatios.get(row);
+								if ("'-Infinity".equals(ratioString)) {
+									ratio = Double.NEGATIVE_INFINITY;
+								} else if ("'Infinity".equals(ratioString)) {
+									ratio = Double.POSITIVE_INFINITY;
+								} else {
+									ratio = Double.valueOf(ratioString);
+								}
 							}
-						}
-						if (proteinAccs == null || proteinAccs.isEmpty()) {
-							log.warn("Peptide '" + sequence + "' (row " + row
-									+ ") is not found in FASTA (brute force search of peptide)");
-							if (!fastaDigestion.isIgnorePeptidesNotFoundInDB()) {
-								throw new PeptideNotFoundInDBIndexException(sequence
-										+ " not found in Fasta DB. If you want to ignore that peptide, set ignorePeptidesNotFoundInDB=true in the input parameters");
+							// remove Ptms or pre and post peptide characteres
+							final Set<String> proteinAccs = new HashSet<String>();
+							final String cleanSequence = FastaParser.cleanSequence(sequence);
+							for (final String proteinSequence : proteinSequences) {
+								if (proteinSequence.contains(cleanSequence)) {
+									proteinAccs.add(proteinsByProteinSequences.get(proteinSequence));
+								}
 							}
-							continue;
-						}
-						for (final String acc : proteinAccs) {
-							Protein protein = null;
-							if (ret.containsKey(acc)) {
-								protein = ret.get(acc);
-							} else {
-								protein = new Protein(acc);
-								numProteins++;
-								ret.put(acc, protein);
+							if (proteinAccs == null || proteinAccs.isEmpty()) {
+								log.warn("Peptide '" + sequence + "' (row " + row
+										+ ") is not found in FASTA (brute force search of peptide)");
+								if (!fastaDigestion.isIgnorePeptidesNotFoundInDB()) {
+									throw new PeptideNotFoundInDBIndexException(sequence
+											+ " not found in Fasta DB. If you want to ignore that peptide, set ignorePeptidesNotFoundInDB=true in the input parameters");
+								}
+								continue;
 							}
-							final Peptide peptide = new Peptide(sequence, ratio);
-							numPeptides++;
-							protein.getPeptides().add(peptide);
+							for (final String acc : proteinAccs) {
+								Protein protein = null;
+								if (ret.containsKey(acc)) {
+									protein = ret.get(acc);
+								} else {
+									protein = new Protein(acc);
+									numProteins++;
+									ret.put(acc, protein);
+								}
+								final Peptide peptide = new Peptide(sequence, ratio);
+								numPeptides++;
+								protein.getPeptides().add(peptide);
+							}
 						}
 					}
 				}

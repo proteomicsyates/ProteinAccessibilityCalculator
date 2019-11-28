@@ -171,6 +171,9 @@ public abstract class JMolReportManager<R extends ProteinReport<T>, T extends JM
 			keys.addAll(reportsByKey.keySet());
 			Collections.sort(keys);
 			boolean firstOne = true;
+			if (file.length() != 0l) {
+				firstOne = false;
+			}
 			for (final String key : keys) {
 				final R proteinReport = reportsByKey.get(key);
 				final TIntObjectHashMap<Set<T>> positions = proteinReport.getReportsByPositionInUniprotSeq();
@@ -183,6 +186,10 @@ public abstract class JMolReportManager<R extends ProteinReport<T>, T extends JM
 				for (final Integer position : sortedPositions) {
 					final Set<T> reports = positions.get(position);
 					for (final JMolAtomReport surfaceAccessibilityReport : reports) {
+						if (surfaceAccessibilityReport.isStored()) {
+							// do not write it again
+							continue;
+						}
 						if (firstOne) {
 							log.info("Overriding report of protein " + proteinReport.getUniprotACC() + " to file");
 							// write header for the first one
@@ -190,6 +197,7 @@ public abstract class JMolReportManager<R extends ProteinReport<T>, T extends JM
 							firstOne = false;
 						}
 						out.println(surfaceAccessibilityReport.toString());
+						surfaceAccessibilityReport.setStored(true);
 					}
 				}
 			}
@@ -273,7 +281,7 @@ public abstract class JMolReportManager<R extends ProteinReport<T>, T extends JM
 		}
 	}
 
-	private void addReport(T report) {
+	public void addReport(T report) {
 		final String key = report.getReportKey();
 		if (reportsByKey.containsKey(key)) {
 			reportsByKey.get(key).addReport(report);

@@ -42,13 +42,14 @@ public class SurfaceCalculator extends Calculator<SurfaceProteinReport, SurfaceR
 	public SurfaceReport calculateReport(PDBParser parser, InputParameters inputParameters, Atom3D atom,
 			int positionInPDB, Float resolution) {
 
-		Double accesibility = parser.getSurfaceAccessibilityOfAtom(atom, inputParameters.isRemoveOtherChains(),
+		final Double accesibility = parser.getSurfaceAccessibilityOfAtom(atom, inputParameters.isRemoveOtherChains(),
 				inputParameters.isRemoveOtherMolecules());
 		if (accesibility != null) {
-			SurfaceReport report = new SurfaceReport(accesibility, inputParameters.getPdbID(), atom,
+			final SurfaceReport report = new SurfaceReport(accesibility, inputParameters.getPdbID(), atom,
 					inputParameters.getUniprotACC(), inputParameters.getPositionInUniprotProtein(), resolution,
 					inputParameters.isRemoveOtherChains(), inputParameters.isRemoveOtherMolecules(),
 					parser.getMutation(), parser.getExperimentalMethod());
+			this.reportManager.addReport(report);
 			return report;
 		}
 		return null;

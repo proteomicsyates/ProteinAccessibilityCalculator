@@ -82,6 +82,10 @@
 	        	<groupId>org.slf4j</groupId>
 	        	<artifactId>slf4j-log4j12</artifactId>
 	        </exclusion>
+	        <exclusion>
+	        	<groupId>net.jimmc</groupId>
+	        	<artifactId>jshortcut</artifactId>
+	        </exclusion>
   		</exclusions>
   	</dependency>
   	<dependency>
